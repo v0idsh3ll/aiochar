@@ -79,20 +79,59 @@ el.replaceWith(d);
     def token(self):
         return self.__token
 
+    #GET METHODS
     async def get_me(self) -&gt; int:
         &#34;&#34;&#34;
         Get id by token.
 
         :return: Profile&#39;s ID
+        :raise: InvalidKey when invalid_api_key API error
         &#34;&#34;&#34;
         me_id = await self.session.get(path=&#34;me&#34;, headers=self.base_headers)
 
-        if me_id:
-            if &#34;user_id&#34; in me_id:
-                return me_id[&#34;user_id&#34;]
-            elif &#34;error&#34; in me_id:
-                if me_id[&#34;error&#34;][&#34;code&#34;] == &#34;invalid_api_key&#34;:
-                    raise InvalidKey
+        if &#34;user_id&#34; in me_id:
+            return me_id[&#34;user_id&#34;]
+        elif &#34;error&#34; in me_id:
+            if me_id[&#34;error&#34;][&#34;code&#34;] == &#34;invalid_api_key&#34;:
+                raise InvalidKey
+            else:
+                raise Exception(me_id[&#34;message&#34;])
+
+
+    #POST METHODS
+
+    async def like_post(
+            self,
+            post_id: int
+    ) -&gt; dict:
+        &#34;&#34;&#34;
+        Like a post by id
+
+        :param post_id: Post_id, int
+        :return: like_count, liked, post_id, success
+        :raise: NotFoundPost when not found post API error, InvalidKey when invalid_api_key
+        &#34;&#34;&#34;
+        data = {
+            &#34;post_id&#34;: post_id
+        }
+
+        raw = await self.session.post(path=&#34;like_post&#34;, headers=self.base_headers, data=data)
+
+        if &#34;error&#34; in raw:
+            if raw[&#34;error&#34;][&#34;code&#34;] == &#34;not_found&#34;:
+                raise NotFoundPost
+            elif raw[&#34;error&#34;][&#34;code&#34;] == &#34;invalid_api_key&#34;:
+                raise InvalidKey
+            else:
+                raise Exception(raw[&#34;error&#34;][&#34;code&#34;])
+        else:
+            returned_data = {
+                &#34;like_count&#34;: raw[&#34;like_count&#34;],
+                &#34;liked&#34;: raw[&#34;liked&#34;],
+                &#34;post_id&#34;: raw[&#34;post_id&#34;],
+                &#34;success&#34;: raw[&#34;success&#34;]
+            }
+            return returned_data
 
 
     async def close(self) -&gt; None:
@@ -166,18 +205,67 @@ def token(self):
     Get id by token.
 
     :return: Profile&#39;s ID
+    :raise: InvalidKey when invalid_api_key API error
     &#34;&#34;&#34;
     me_id = await self.session.get(path=&#34;me&#34;, headers=self.base_headers)
 
-    if me_id:
-        if &#34;user_id&#34; in me_id:
-            return me_id[&#34;user_id&#34;]
-        elif &#34;error&#34; in me_id:
-            if me_id[&#34;error&#34;][&#34;code&#34;] == &#34;invalid_api_key&#34;:
-                raise InvalidKey</code></pre>
+    if &#34;user_id&#34; in me_id:
+        return me_id[&#34;user_id&#34;]
+    elif &#34;error&#34; in me_id:
+        if me_id[&#34;error&#34;][&#34;code&#34;] == &#34;invalid_api_key&#34;:
+            raise InvalidKey
+        else:
+            raise Exception(me_id[&#34;message&#34;])</code></pre>
 </details>
 <div class="desc"><p>Get id by token.</p>
-<p>:return: Profile's ID</p></div>
+<p>:return: Profile's ID
+:raise: InvalidKey when invalid_api_key API error</p></div>
+</dd>
+<dt id="aiochar.client.bot.Bot.like_post"><code class="name flex">
+<span>async def <span class="ident">like_post</span></span>(<span>self, post_id: int) ‑> dict</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def like_post(
+        self,
+        post_id: int
+) -&gt; dict:
+    &#34;&#34;&#34;
+    Like a post by id
+
+    :param post_id: Post_id, int
+    :return: like_count, liked, post_id, success
+    :raise: NotFoundPost when not found post API error, InvalidKey when invalid_api_key
+    &#34;&#34;&#34;
+    data = {
+        &#34;post_id&#34;: post_id
+    }
+
+    raw = await self.session.post(path=&#34;like_post&#34;, headers=self.base_headers, data=data)
+
+    if &#34;error&#34; in raw:
+        if raw[&#34;error&#34;][&#34;code&#34;] == &#34;not_found&#34;:
+            raise NotFoundPost
+        elif raw[&#34;error&#34;][&#34;code&#34;] == &#34;invalid_api_key&#34;:
+            raise InvalidKey
+        else:
+            raise Exception(raw[&#34;error&#34;][&#34;code&#34;])
+    else:
+        returned_data = {
+            &#34;like_count&#34;: raw[&#34;like_count&#34;],
+            &#34;liked&#34;: raw[&#34;liked&#34;],
+            &#34;post_id&#34;: raw[&#34;post_id&#34;],
+            &#34;success&#34;: raw[&#34;success&#34;]
+        }
+        return returned_data</code></pre>
+</details>
+<div class="desc"><p>Like a post by id</p>
+<p>:param post_id: Post_id, int
+:return: like_count, liked, post_id, success
+:raise: NotFoundPost when not found post API error, InvalidKey when invalid_api_key</p></div>
 </dd>
 </dl>
 </dd>
@@ -201,6 +289,7 @@ def token(self):
 <ul class="">
 <li><code><a title="aiochar.client.bot.Bot.close" href="#aiochar.client.bot.Bot.close">close</a></code></li>
 <li><code><a title="aiochar.client.bot.Bot.get_me" href="#aiochar.client.bot.Bot.get_me">get_me</a></code></li>
+<li><code><a title="aiochar.client.bot.Bot.like_post" href="#aiochar.client.bot.Bot.like_post">like_post</a></code></li>
 <li><code><a title="aiochar.client.bot.Bot.token" href="#aiochar.client.bot.Bot.token">token</a></code></li>
 </ul>
 </li>

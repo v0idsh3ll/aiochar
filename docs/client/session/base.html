@@ -83,6 +83,18 @@ el.replaceWith(d);
         &#34;&#34;&#34;
         session = await self.get_session()
         async with session.get(url=f&#34;https://char.social/api/v1/{path.lstrip(&#39;/&#39;)}&#34;, **kwargs) as response:
+            return await response.json()
+
+    async def post(self,
+                  path: str,
+                  **kwargs) -&gt; dict[str, ...]:
+        &#34;&#34;&#34;
+        Get request
+        :param path: Path after https://char.social/api/v1/
+        :return: Response
+        &#34;&#34;&#34;
+        session = await self.get_session()
+        async with session.post(url=f&#34;https://char.social/api/v1/{path.lstrip(&#39;/&#39;)}&#34;, **kwargs) as response:
             return await response.json()</code></pre>
 </details>
 <div class="desc"></div>
@@ -141,6 +153,30 @@ el.replaceWith(d);
 </details>
 <div class="desc"></div>
 </dd>
+<dt id="aiochar.client.session.base.BaseSession.post"><code class="name flex">
+<span>async def <span class="ident">post</span></span>(<span>self, path: str, **kwargs) ‑> dict[str, ...]</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def post(self,
+              path: str,
+              **kwargs) -&gt; dict[str, ...]:
+    &#34;&#34;&#34;
+    Get request
+    :param path: Path after https://char.social/api/v1/
+    :return: Response
+    &#34;&#34;&#34;
+    session = await self.get_session()
+    async with session.post(url=f&#34;https://char.social/api/v1/{path.lstrip(&#39;/&#39;)}&#34;, **kwargs) as response:
+        return await response.json()</code></pre>
+</details>
+<div class="desc"><p>Get request
+:param path: Path after <a href="https://char.social/api/v1/">https://char.social/api/v1/</a>
+:return: Response</p></div>
+</dd>
 </dl>
 </dd>
 </dl>
@@ -164,6 +200,7 @@ el.replaceWith(d);
 <li><code><a title="aiochar.client.session.base.BaseSession.close" href="#aiochar.client.session.base.BaseSession.close">close</a></code></li>
 <li><code><a title="aiochar.client.session.base.BaseSession.get" href="#aiochar.client.session.base.BaseSession.get">get</a></code></li>
 <li><code><a title="aiochar.client.session.base.BaseSession.get_session" href="#aiochar.client.session.base.BaseSession.get_session">get_session</a></code></li>
+<li><code><a title="aiochar.client.session.base.BaseSession.post" href="#aiochar.client.session.base.BaseSession.post">post</a></code></li>
 </ul>
 </li>
 </ul>

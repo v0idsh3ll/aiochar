@@ -29,3 +29,15 @@ class BaseSession:
         session = await self.get_session()
         async with session.get(url=f"https://char.social/api/v1/{path.lstrip('/')}", **kwargs) as response:
             return await response.json()
+
+    async def post(self,
+                  path: str,
+                  **kwargs) -> dict[str, ...]:
+        """
+        Get request
+        :param path: Path after https://char.social/api/v1/
+        :return: Response
+        """
+        session = await self.get_session()
+        async with session.post(url=f"https://char.social/api/v1/{path.lstrip('/')}", **kwargs) as response:
+            return await response.json()

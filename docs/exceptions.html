@@ -67,6 +67,7 @@ el.replaceWith(d);
 <h3>Subclasses</h3>
 <ul class="hlist">
 <li><a title="aiochar.exceptions.InvalidKey" href="#aiochar.exceptions.InvalidKey">InvalidKey</a></li>
+<li><a title="aiochar.exceptions.NotFoundPost" href="#aiochar.exceptions.NotFoundPost">NotFoundPost</a></li>
 </ul>
 </dd>
 <dt id="aiochar.exceptions.InvalidKey"><code class="flex name class">
@@ -80,6 +81,26 @@ el.replaceWith(d);
 <pre><code class="python">class InvalidKey(BaseAiocharException):
     def __init__(self):
         super().__init__(&#34;API key is missing or invalid.&#34;)</code></pre>
+</details>
+<div class="desc"><p>Common base class for all non-exit exceptions.</p></div>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="aiochar.exceptions.BaseAiocharException" href="#aiochar.exceptions.BaseAiocharException">BaseAiocharException</a></li>
+<li>builtins.Exception</li>
+<li>builtins.BaseException</li>
+</ul>
+</dd>
+<dt id="aiochar.exceptions.NotFoundPost"><code class="flex name class">
+<span>class <span class="ident">NotFoundPost</span></span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class NotFoundPost(BaseAiocharException):
+    def __init__(self):
+        super().__init__(&#34;Post not found.&#34;)</code></pre>
 </details>
 <div class="desc"><p>Common base class for all non-exit exceptions.</p></div>
 <h3>Ancestors</h3>
@@ -109,6 +130,9 @@ el.replaceWith(d);
 </li>
 <li>
 <h4><code><a title="aiochar.exceptions.InvalidKey" href="#aiochar.exceptions.InvalidKey">InvalidKey</a></code></h4>
+</li>
+<li>
+<h4><code><a title="aiochar.exceptions.NotFoundPost" href="#aiochar.exceptions.NotFoundPost">NotFoundPost</a></code></h4>
 </li>
 </ul>
 </li>
