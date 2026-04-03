@@ -6,7 +6,7 @@ class TokenValidationError(Exception):
     pass
 
 
-VALID_CHARACTERS = ascii_letters + digits + "_"
+VALID_CHARACTERS = ascii_letters + digits + "_" + "-"
 
 @lru_cache
 def validate_token(token: str) -> bool:
@@ -29,7 +29,7 @@ def validate_token(token: str) -> bool:
         raise TokenValidationError(message)
 
     if any(x not in VALID_CHARACTERS for x in token):
-        message = "Token is invalid! It must contain only a-Z and 0-9 and _."
+        message = "Token is invalid! It must contain only a-Z and 0-9 and _ and -."
         raise TokenValidationError(message)
 
     return True
