@@ -11,7 +11,7 @@ class NotFoundPost(BaseAiocharException):
 
 class NoEnoughData(BaseAiocharException):
     def __init__(self):
-        super().__init__("Not enough data. Check if you provided all needed data.")
+        super().__init__("Not enough data. Check that you provided all needed data.")
 
 class APIError(BaseAiocharException):
     def __init__(self, *args):

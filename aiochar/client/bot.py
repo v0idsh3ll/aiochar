@@ -7,6 +7,8 @@ from ..models import Post, User, Reply
 
 from .utils import sort_validation, timeframe_validation, country_code_validation, post_format_validation
 
+from ..exceptions import NoEnoughData
+
 
 class Bot:
     def __init__(
@@ -359,6 +361,94 @@ class Bot:
         created_post = await self.get_post(created_post_id)
 
         return created_post
+
+    async def follow_user(
+            self,
+            user: User | None = None,
+            user_id: int | None = None) -> bool:
+        """
+        Follow user by user_id or User()
+
+        :param user: User()
+        :param user_id: user_id
+        :return: True if followed else False
+        """
+        if not user and not user_id:
+            raise NoEnoughData
+
+        if user:
+            user_id = user.id
+
+        data = {"user_id": user_id}
+
+        followed = await self.session.post("follow_user", json=data)
+        return followed["success"]
+
+    async def unfollow_user(
+            self,
+            user: User | None = None,
+            user_id: int | None = None) -> bool:
+        """
+        Unfollow user by user_id or User()
+
+        :param user: User()
+        :param user_id: user_id
+        :return: True if followed else False
+        """
+        if not user and not user_id:
+            raise NoEnoughData
+
+        if user:
+            user_id = user.id
+
+        data = {"user_id": user_id}
+
+        followed = await self.session.post("unfollow_user", json=data)
+        return followed["success"]
+
+    async def mute_user(
+            self,
+            user: User | None = None,
+            user_id: int | None = None) -> bool:
+        """
+        Mute user by user_id or User()
+
+        :param user: User()
+        :param user_id: user_id
+        :return: True if followed else False
+        """
+        if not user and not user_id:
+            raise NoEnoughData
+
+        if user:
+            user_id = user.id
+
+        data = {"user_id": user_id}
+
+        followed = await self.session.post("mute_user", json=data)
+        return followed["success"]
+
+    async def unmute_user(
+            self,
+            user: User | None = None,
+            user_id: int | None = None) -> bool:
+        """
+        Unmute user by user_id or User()
+
+        :param user: User()
+        :param user_id: user_id
+        :return: True if followed else False
+        """
+        if not user and not user_id:
+            raise NoEnoughData
+
+        if user:
+            user_id = user.id
+
+        data = {"user_id": user_id}
+
+        followed = await self.session.post("unmute_user", json=data)
+        return followed["success"]
 
     # async def like_post(
     #         self,
