@@ -73,3 +73,73 @@ class Post:
 
     def __str__(self):
         return str(self.to_dict())
+
+
+class User:
+    """
+    Main class to contain users
+    """
+    def __init__(
+            self,
+            id: int,
+            username: str,
+            flair: list[str],
+            created_at_iso: str,
+            api_bot: bool,
+            followed: bool,
+            muted: bool,
+            followers: int,
+            following: int,
+            muting: int,
+            muted_by: int,
+            followed_tags: int,
+            muted_tags: int,
+            posts: int,
+            post_posts: int,
+            post_reposts: int,
+            post_replies: int,
+            likes_received: int,
+            description: str = "",
+            **kwargs):
+
+        for key, value in kwargs.items():
+            setattr(self, key, value)
+
+        self.id = id
+        self.username = username
+        self.flair = flair
+
+        try:
+            self.created_at_iso = datetime.fromisoformat(created_at_iso.replace("Z", "+00:00"))
+        except Exception:
+            self.created_at_iso = None
+
+        self.api_bot = api_bot
+        self.followed = followed
+        self.muted = muted
+        self.followers = followers
+        self.following = following
+        self.muting = muting
+        self.muted_by = muted_by
+        self.followed_tags = followed_tags
+        self.muted_tags = muted_tags
+        self.posts = posts
+        self.post_posts = post_posts
+        self.post_reposts = post_reposts
+        self.post_replies = post_replies
+        self.likes_received = likes_received
+        self.description = description
+
+    def to_dict(self) -> dict:
+        """
+        Convert a user to a dict
+
+        :return: Dict with user data
+        """
+        result = self.__dict__.copy()
+        if result.get("created_at_iso"):
+            result["created_at_iso"] = result["created_at_iso"].isoformat()
+        return result
+
+    def __str__(self):
+        return str(self.to_dict())

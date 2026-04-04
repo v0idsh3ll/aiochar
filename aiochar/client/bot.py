@@ -1,7 +1,7 @@
 from aiochar.utils.token import validate_token
 from .session.base import BaseSession
 from ..exceptions import InvalidKey, NotFoundPost, NoEnoughData, APIError
-from ..models import Post
+from ..models import Post, User
 
 
 class Bot:
@@ -107,6 +107,28 @@ class Bot:
                     got_posts += 1
 
         return tuple(returned_data)
+
+    async def get_user(
+            self,
+            user_id: int) -> User:
+        """
+        Get a user by id
+
+        :param user_id: User's ID. May be here: https://char.social/u/USER_ID
+        :return: User
+        """
+        raw = await self.session.get(path=f"user/{user_id}")
+        raw = raw["user"]
+
+        counted = {**raw["counts"]}
+
+        user_data = {**raw}
+        user_data.pop("counts")
+
+        user_data.update(**counted)
+
+        return User(**user_data)
+
 
 
     #POST METHODS
