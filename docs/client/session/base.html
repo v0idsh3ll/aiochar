@@ -42,6 +42,23 @@ el.replaceWith(d);
 <section>
 </section>
 <section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="aiochar.client.session.base.snake_to_camel"><code class="name flex">
+<span>def <span class="ident">snake_to_camel</span></span>(<span>name: str) ‑> str</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def snake_to_camel(name: str) -&gt; str:
+    parts = name.split(&#39;_&#39;)
+    return &#39;&#39;.join(word.capitalize() for word in parts)</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+</dl>
 </section>
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
@@ -82,8 +99,30 @@ el.replaceWith(d);
         :return: Response
         &#34;&#34;&#34;
         session = await self.get_session()
-        async with session.get(url=f&#34;https://char.social/api/v1/{path.lstrip(&#39;/&#39;)}&#34;, **kwargs) as response:
-            return await response.json()
+        async with session.get(url=f&#34;{self.base_url}{path.lstrip(&#39;/&#39;)}&#34;, headers=self._base_headers, **kwargs) as response:
+            try:
+                json_format = await response.json()
+            except Exception:
+                raise APIError(&#34;Invalid JSON response&#34;)
+
+            if response.status == 400:
+                raise CharBadRequest
+            if &#34;error&#34; in json_format:
+                code = json_format[&#34;error&#34;][&#34;code&#34;]
+                if code == &#34;invalid_api_key&#34;:
+                    raise InvalidKey
+                elif code == &#34;not_found&#34;:
+                    raise NotFoundPost
+                else:
+                    code = json_format[&#34;error&#34;][&#34;code&#34;]
+                    message = json_format[&#34;error&#34;].get(&#34;message&#34;, &#34;&#34;)
+
+                    exc_name = snake_to_camel(code)
+                    ExcCls = type(exc_name, (APIError,), {})
+                    raise ExcCls(message)
+
+            response.raise_for_status()
+            return json_format
 
     async def post(self,
                   path: str,
@@ -94,8 +133,25 @@ el.replaceWith(d);
         :return: Response
         &#34;&#34;&#34;
         session = await self.get_session()
-        async with session.post(url=f&#34;https://char.social/api/v1/{path.lstrip(&#39;/&#39;)}&#34;, **kwargs) as response:
-            return await response.json()</code></pre>
+        async with session.post(url=f&#34;{self.base_url}{path.lstrip(&#39;/&#39;)}&#34;, headers=self._base_headers, **kwargs) as response:
+            try:
+                json_format = await response.json()
+            except Exception:
+                raise APIError(&#34;Invalid JSON response&#34;)
+
+            if response.status == 400:
+                raise CharBadRequest
+            if &#34;error&#34; in json_format:
+                code = json_format[&#34;error&#34;][&#34;code&#34;]
+                if code == &#34;invalid_api_key&#34;:
+                    raise InvalidKey
+                elif code == &#34;not_found&#34;:
+                    raise NotFoundPost
+                else:
+                    raise APIError(json_format.get(&#34;error&#34;, {}))
+
+            response.raise_for_status()
+            return json_format</code></pre>
 </details>
 <div class="desc"></div>
 <h3>Methods</h3>
@@ -131,8 +187,30 @@ el.replaceWith(d);
     :return: Response
     &#34;&#34;&#34;
     session = await self.get_session()
-    async with session.get(url=f&#34;https://char.social/api/v1/{path.lstrip(&#39;/&#39;)}&#34;, **kwargs) as response:
-        return await response.json()</code></pre>
+    async with session.get(url=f&#34;{self.base_url}{path.lstrip(&#39;/&#39;)}&#34;, headers=self._base_headers, **kwargs) as response:
+        try:
+            json_format = await response.json()
+        except Exception:
+            raise APIError(&#34;Invalid JSON response&#34;)
+
+        if response.status == 400:
+            raise CharBadRequest
+        if &#34;error&#34; in json_format:
+            code = json_format[&#34;error&#34;][&#34;code&#34;]
+            if code == &#34;invalid_api_key&#34;:
+                raise InvalidKey
+            elif code == &#34;not_found&#34;:
+                raise NotFoundPost
+            else:
+                code = json_format[&#34;error&#34;][&#34;code&#34;]
+                message = json_format[&#34;error&#34;].get(&#34;message&#34;, &#34;&#34;)
+
+                exc_name = snake_to_camel(code)
+                ExcCls = type(exc_name, (APIError,), {})
+                raise ExcCls(message)
+
+        response.raise_for_status()
+        return json_format</code></pre>
 </details>
 <div class="desc"><p>Get request
 :param path: Path after <a href="https://char.social/api/v1/">https://char.social/api/v1/</a>
@@ -170,8 +248,25 @@ el.replaceWith(d);
     :return: Response
     &#34;&#34;&#34;
     session = await self.get_session()
-    async with session.post(url=f&#34;https://char.social/api/v1/{path.lstrip(&#39;/&#39;)}&#34;, **kwargs) as response:
-        return await response.json()</code></pre>
+    async with session.post(url=f&#34;{self.base_url}{path.lstrip(&#39;/&#39;)}&#34;, headers=self._base_headers, **kwargs) as response:
+        try:
+            json_format = await response.json()
+        except Exception:
+            raise APIError(&#34;Invalid JSON response&#34;)
+
+        if response.status == 400:
+            raise CharBadRequest
+        if &#34;error&#34; in json_format:
+            code = json_format[&#34;error&#34;][&#34;code&#34;]
+            if code == &#34;invalid_api_key&#34;:
+                raise InvalidKey
+            elif code == &#34;not_found&#34;:
+                raise NotFoundPost
+            else:
+                raise APIError(json_format.get(&#34;error&#34;, {}))
+
+        response.raise_for_status()
+        return json_format</code></pre>
 </details>
 <div class="desc"><p>Get request
 :param path: Path after <a href="https://char.social/api/v1/">https://char.social/api/v1/</a>
@@ -190,6 +285,11 @@ el.replaceWith(d);
 <li><h3>Super-module</h3>
 <ul>
 <li><code><a title="aiochar.client.session" href="index.html">aiochar.client.session</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="aiochar.client.session.base.snake_to_camel" href="#aiochar.client.session.base.snake_to_camel">snake_to_camel</a></code></li>
 </ul>
 </li>
 <li><h3><a href="#header-classes">Classes</a></h3>

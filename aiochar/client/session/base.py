@@ -1,4 +1,9 @@
 import aiohttp
+from aiochar.exceptions import CharBadRequest, APIError, InvalidKey, NotFoundPost
+
+def snake_to_camel(name: str) -> str:
+    parts = name.split('_')
+    return ''.join(word.capitalize() for word in parts)
 
 class BaseSession:
     def __init__(
@@ -27,8 +32,30 @@ class BaseSession:
         :return: Response
         """
         session = await self.get_session()
-        async with session.get(url=f"https://char.social/api/v1/{path.lstrip('/')}", **kwargs) as response:
-            return await response.json()
+        async with session.get(url=f"{self.base_url}{path.lstrip('/')}", headers=self._base_headers, **kwargs) as response:
+            try:
+                json_format = await response.json()
+            except Exception:
+                raise APIError("Invalid JSON response")
+
+            if response.status == 400:
+                raise CharBadRequest
+            if "error" in json_format:
+                code = json_format["error"]["code"]
+                if code == "invalid_api_key":
+                    raise InvalidKey
+                elif code == "not_found":
+                    raise NotFoundPost
+                else:
+                    code = json_format["error"]["code"]
+                    message = json_format["error"].get("message", "")
+
+                    exc_name = snake_to_camel(code)
+                    ExcCls = type(exc_name, (APIError,), {})
+                    raise ExcCls(message)
+
+            response.raise_for_status()
+            return json_format
 
     async def post(self,
                   path: str,
@@ -39,5 +66,22 @@ class BaseSession:
         :return: Response
         """
         session = await self.get_session()
-        async with session.post(url=f"https://char.social/api/v1/{path.lstrip('/')}", **kwargs) as response:
-            return await response.json()
+        async with session.post(url=f"{self.base_url}{path.lstrip('/')}", headers=self._base_headers, **kwargs) as response:
+            try:
+                json_format = await response.json()
+            except Exception:
+                raise APIError("Invalid JSON response")
+
+            if response.status == 400:
+                raise CharBadRequest
+            if "error" in json_format:
+                code = json_format["error"]["code"]
+                if code == "invalid_api_key":
+                    raise InvalidKey
+                elif code == "not_found":
+                    raise NotFoundPost
+                else:
+                    raise APIError(json_format.get("error", {}))
+
+            response.raise_for_status()
+            return json_format

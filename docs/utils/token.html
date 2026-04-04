@@ -73,7 +73,7 @@ def validate_token(token: str) -&gt; bool:
         raise TokenValidationError(message)
 
     if any(x not in VALID_CHARACTERS for x in token):
-        message = &#34;Token is invalid! It must contain only a-Z and 0-9 and _.&#34;
+        message = &#34;Token is invalid! It must contain only a-Z and 0-9 and _ and -.&#34;
         raise TokenValidationError(message)
 
     return True</code></pre>

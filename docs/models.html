@@ -44,6 +44,149 @@ el.replaceWith(d);
 <section>
 </section>
 <section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="aiochar.models.Post"><code class="flex name class">
+<span>class <span class="ident">Post</span></span>
+<span>(</span><span>post_id: int,<br>user_id: int,<br>username: str,<br>api_bot: bool,<br>flair: list[str],<br>content: str,<br>content_html: str,<br>created_at_iso: str,<br>country_code: str,<br>like_post_id: int,<br>like_count: int,<br>reply_count: int,<br>repost_count: int,<br>is_liked: bool,<br>is_own_post: bool,<br>hashtags: list[str],<br>mentions: list[str],<br>repost_of_id: int | None = None,<br>repost_text: str | None = None)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class Post:
+    def __init__(
+        self,
+        post_id: int,
+        user_id: int,
+        username: str,
+        api_bot: bool,
+        flair: list[str],
+        content: str,
+        content_html: str,
+        created_at_iso: str,
+        country_code: str,
+        like_post_id: int,
+        like_count: int,
+        reply_count: int,
+        repost_count: int,
+        is_liked: bool,
+        is_own_post: bool,
+        hashtags: list[str],
+        mentions: list[str],
+        repost_of_id: int | None = None,
+        repost_text: str | None = None
+    ) -&gt; None:
+
+        self.post_id = int(post_id)
+        self.user_id = int(user_id)
+        self.username = str(username)
+
+        self.api_bot = bool(api_bot)
+        self.flair = flair or []
+
+        self.content = content or &#34;&#34;
+        self.content_html = content_html or &#34;&#34;
+
+        try:
+            self.created_at_iso = datetime.fromisoformat(created_at_iso.replace(&#34;Z&#34;, &#34;+00:00&#34;))
+        except Exception:
+            self.created_at = None
+
+        self.country_code = country_code or &#34;??&#34;
+
+        self.like_post_id = like_post_id
+
+        self.like_count = int(like_count or 0)
+        self.reply_count = int(reply_count or 0)
+        self.repost_count = int(repost_count or 0)
+
+        self.is_liked = bool(is_liked)
+        self.is_own_post = bool(is_own_post)
+
+        self.hashtags = hashtags or []
+        self.mentions = mentions or []
+
+        self.repost_of_id = repost_of_id
+        self.repost_text = repost_text
+
+    def to_dict(self) -&gt; dict:
+        &#34;&#34;&#34;
+        Convert a post to a dict
+
+        :return: Dict with post data
+        &#34;&#34;&#34;
+        return {
+            &#34;post_id&#34;: self.post_id,
+            &#34;user_id&#34;: self.user_id,
+            &#34;username&#34;: self.username,
+            &#34;api_bot&#34;: self.api_bot,
+            &#34;flair&#34;: self.flair,
+            &#34;content&#34;: self.content,
+            &#34;content_html&#34;: self.content_html,
+            &#34;created_at_iso&#34;: self.created_at_iso.isoformat() if self.created_at_iso else None,
+            &#34;country_code&#34;: self.country_code,
+            &#34;like_post_id&#34;: self.like_post_id,
+            &#34;like_count&#34;: self.like_count,
+            &#34;reply_count&#34;: self.reply_count,
+            &#34;repost_count&#34;: self.repost_count,
+            &#34;is_liked&#34;: self.is_liked,
+            &#34;is_own_post&#34;: self.is_own_post,
+            &#34;hashtags&#34;: self.hashtags,
+            &#34;mentions&#34;: self.mentions,
+            &#34;repost_of_id&#34;: self.repost_of_id,
+            &#34;repost_text&#34;: self.repost_text
+        }
+
+    def __str__(self):
+        return str(self.to_dict())</code></pre>
+</details>
+<div class="desc"></div>
+<h3>Methods</h3>
+<dl>
+<dt id="aiochar.models.Post.to_dict"><code class="name flex">
+<span>def <span class="ident">to_dict</span></span>(<span>self) ‑> dict</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def to_dict(self) -&gt; dict:
+    &#34;&#34;&#34;
+    Convert a post to a dict
+
+    :return: Dict with post data
+    &#34;&#34;&#34;
+    return {
+        &#34;post_id&#34;: self.post_id,
+        &#34;user_id&#34;: self.user_id,
+        &#34;username&#34;: self.username,
+        &#34;api_bot&#34;: self.api_bot,
+        &#34;flair&#34;: self.flair,
+        &#34;content&#34;: self.content,
+        &#34;content_html&#34;: self.content_html,
+        &#34;created_at_iso&#34;: self.created_at_iso.isoformat() if self.created_at_iso else None,
+        &#34;country_code&#34;: self.country_code,
+        &#34;like_post_id&#34;: self.like_post_id,
+        &#34;like_count&#34;: self.like_count,
+        &#34;reply_count&#34;: self.reply_count,
+        &#34;repost_count&#34;: self.repost_count,
+        &#34;is_liked&#34;: self.is_liked,
+        &#34;is_own_post&#34;: self.is_own_post,
+        &#34;hashtags&#34;: self.hashtags,
+        &#34;mentions&#34;: self.mentions,
+        &#34;repost_of_id&#34;: self.repost_of_id,
+        &#34;repost_text&#34;: self.repost_text
+    }</code></pre>
+</details>
+<div class="desc"><p>Convert a post to a dict</p>
+<p>:return: Dict with post data</p></div>
+</dd>
+</dl>
+</dd>
+</dl>
 </section>
 </article>
 <nav id="sidebar">
@@ -54,6 +197,16 @@ el.replaceWith(d);
 <li><h3>Super-module</h3>
 <ul>
 <li><code><a title="aiochar" href="index.html">aiochar</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="aiochar.models.Post" href="#aiochar.models.Post">Post</a></code></h4>
+<ul class="">
+<li><code><a title="aiochar.models.Post.to_dict" href="#aiochar.models.Post.to_dict">to_dict</a></code></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>

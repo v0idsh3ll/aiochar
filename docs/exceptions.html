@@ -46,6 +46,27 @@ el.replaceWith(d);
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
+<dt id="aiochar.exceptions.APIError"><code class="flex name class">
+<span>class <span class="ident">APIError</span></span>
+<span>(</span><span>*args)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class APIError(BaseAiocharException):
+    def __init__(self, *args):
+        super().__init__(*args)</code></pre>
+</details>
+<div class="desc"><p>Common base class for all non-exit exceptions.</p></div>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="aiochar.exceptions.BaseAiocharException" href="#aiochar.exceptions.BaseAiocharException">BaseAiocharException</a></li>
+<li>builtins.Exception</li>
+<li>builtins.BaseException</li>
+</ul>
+</dd>
 <dt id="aiochar.exceptions.BaseAiocharException"><code class="flex name class">
 <span>class <span class="ident">BaseAiocharException</span></span>
 <span>(</span><span>*args, **kwargs)</span>
@@ -66,8 +87,31 @@ el.replaceWith(d);
 </ul>
 <h3>Subclasses</h3>
 <ul class="hlist">
+<li><a title="aiochar.exceptions.APIError" href="#aiochar.exceptions.APIError">APIError</a></li>
+<li><a title="aiochar.exceptions.CharBadRequest" href="#aiochar.exceptions.CharBadRequest">CharBadRequest</a></li>
 <li><a title="aiochar.exceptions.InvalidKey" href="#aiochar.exceptions.InvalidKey">InvalidKey</a></li>
+<li><a title="aiochar.exceptions.NoEnoughData" href="#aiochar.exceptions.NoEnoughData">NoEnoughData</a></li>
 <li><a title="aiochar.exceptions.NotFoundPost" href="#aiochar.exceptions.NotFoundPost">NotFoundPost</a></li>
+</ul>
+</dd>
+<dt id="aiochar.exceptions.CharBadRequest"><code class="flex name class">
+<span>class <span class="ident">CharBadRequest</span></span>
+<span>(</span><span>*args, **kwargs)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class CharBadRequest(BaseAiocharException):
+    pass</code></pre>
+</details>
+<div class="desc"><p>Common base class for all non-exit exceptions.</p></div>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="aiochar.exceptions.BaseAiocharException" href="#aiochar.exceptions.BaseAiocharException">BaseAiocharException</a></li>
+<li>builtins.Exception</li>
+<li>builtins.BaseException</li>
 </ul>
 </dd>
 <dt id="aiochar.exceptions.InvalidKey"><code class="flex name class">
@@ -81,6 +125,26 @@ el.replaceWith(d);
 <pre><code class="python">class InvalidKey(BaseAiocharException):
     def __init__(self):
         super().__init__(&#34;API key is missing or invalid.&#34;)</code></pre>
+</details>
+<div class="desc"><p>Common base class for all non-exit exceptions.</p></div>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="aiochar.exceptions.BaseAiocharException" href="#aiochar.exceptions.BaseAiocharException">BaseAiocharException</a></li>
+<li>builtins.Exception</li>
+<li>builtins.BaseException</li>
+</ul>
+</dd>
+<dt id="aiochar.exceptions.NoEnoughData"><code class="flex name class">
+<span>class <span class="ident">NoEnoughData</span></span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class NoEnoughData(BaseAiocharException):
+    def __init__(self):
+        super().__init__(&#34;Not enough data. Check if you provided all needed data.&#34;)</code></pre>
 </details>
 <div class="desc"><p>Common base class for all non-exit exceptions.</p></div>
 <h3>Ancestors</h3>
@@ -126,10 +190,19 @@ el.replaceWith(d);
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
 <li>
+<h4><code><a title="aiochar.exceptions.APIError" href="#aiochar.exceptions.APIError">APIError</a></code></h4>
+</li>
+<li>
 <h4><code><a title="aiochar.exceptions.BaseAiocharException" href="#aiochar.exceptions.BaseAiocharException">BaseAiocharException</a></code></h4>
 </li>
 <li>
+<h4><code><a title="aiochar.exceptions.CharBadRequest" href="#aiochar.exceptions.CharBadRequest">CharBadRequest</a></code></h4>
+</li>
+<li>
 <h4><code><a title="aiochar.exceptions.InvalidKey" href="#aiochar.exceptions.InvalidKey">InvalidKey</a></code></h4>
+</li>
+<li>
+<h4><code><a title="aiochar.exceptions.NoEnoughData" href="#aiochar.exceptions.NoEnoughData">NoEnoughData</a></code></h4>
 </li>
 <li>
 <h4><code><a title="aiochar.exceptions.NotFoundPost" href="#aiochar.exceptions.NotFoundPost">NotFoundPost</a></code></h4>
