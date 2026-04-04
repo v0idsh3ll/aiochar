@@ -2,10 +2,9 @@ from typing import List
 
 from aiochar.utils.token import validate_token
 from .session.base import BaseSession
-from ..exceptions import InvalidKey, NotFoundPost, NoEnoughData, APIError
 from ..models import Post, User, Reply
 
-from .utils import sort_validation, timeframe_validation
+from .utils import sort_validation, timeframe_validation, country_code_validation
 
 
 class Bot:
@@ -172,14 +171,14 @@ class Bot:
             limit: int = 1,
             sort: str = "latest",
             timeframe: str = "24h",
-            ids_only: bool = False) -> List[Post, Reply] | List[Post] | List[Reply]:
+            ids_only: bool = False) -> tuple[Post | Reply, ...] | tuple[int, ...]:
         """
         Abstract (not the raw API) method to get hashtag feed posts by limit
 
     Gets posts from a specific hashtag feed with pagination support.
     Uses cursor-based pagination internally to fetch exactly `limit` posts.
 
-    :param hashtag: Hashtag to fetch posts from (without the # symbol)
+    :param hashtag: Hashtag to fetch posts from
     :param limit: Maximum number of posts to retrieve. Gets last LIMIT posts.
     :param sort: Sort order for posts. Options: "latest", "popular", "likes". Default: "latest"
     :param timeframe: Time window for sorting by likes. Options: "24h", "1w", "1m", "1y", "all".
@@ -188,16 +187,21 @@ class Bot:
                      If False, returns tuple of Post/Reply objects.
     :return: Tuple of posts (Post/Reply objects if ids_only=False) or tuple of post IDs (ints if ids_only=True)
         """
+
+        # MAKE POST AND REPLIES VALIDATION AND RETURN CORRECT VERSIONS
+
         if sort:
             sort_validation(sort)
         if timeframe:
             timeframe_validation(timeframe)
 
+        hashtag = hashtag.lstrip("#")
+
         got_posts = 0
 
         returned_data = []
 
-        posts = await self.session.get(path=f"hashtag_feed/{hashtag}?ids_only={'true' if ids_only else 'false'}")
+        posts = await self.session.get(path=f"hashtag_feed/{hashtag}?ids_only={'true' if ids_only else 'false'}&sort={sort or 'latest'}&timeframe={timeframe or ''}")
         cursor = posts["next_cursor"]
         if ids_only:
             for post_id in posts["posts"]:
@@ -215,7 +219,79 @@ class Bot:
         has_more = posts["has_more"]
         while got_posts < limit and has_more:
             posts = await self.session.get(
-                path=f"hashtag_feed/{hashtag}?ids_only={'true' if ids_only else 'false'}&cursor={cursor}")
+                path=f"hashtag_feed/{hashtag}?ids_only={'true' if ids_only else 'false'}&cursor={cursor}&sort={sort or 'latest'}&timeframe={timeframe or ''}")
+            cursor = posts["next_cursor"]
+            has_more = posts["has_more"]
+            if ids_only:
+                for post_id in posts["posts"]:
+                    if got_posts >= limit:
+                        return tuple(returned_data)
+                    returned_data.append(post_id)
+                    got_posts += 1
+            else:
+                for post_data in posts["posts"]:
+                    if got_posts >= limit:
+                        return tuple(returned_data)
+                    returned_data.append(Post(**post_data))
+                    got_posts += 1
+
+        return tuple(returned_data)
+
+    async def get_country_feed(
+            self,
+            country_code: str,
+            limit: int = 1,
+            sort: str = "latest",
+            timeframe: str = "24h",
+            ids_only: bool = False) -> tuple[Post | Reply, ...] | tuple[int, ...]:
+        """
+        Abstract (not the raw API) method to get hashtag feed posts by limit
+
+    Gets posts from a specific hashtag feed with pagination support.
+    Uses cursor-based pagination internally to fetch exactly `limit` posts.
+
+    :param country_code: Country code to fetch posts from (RU/US/FR/etc)
+    :param limit: Maximum number of posts to retrieve. Gets last LIMIT posts.
+    :param sort: Sort order for posts. Options: "latest", "popular", "likes". Default: "latest"
+    :param timeframe: Time window for sorting by likes. Options: "24h", "1w", "1m", "1y", "all".
+                      Only applies when sort="likes". Default: "24h"
+    :param ids_only: Return only post IDs without any other data. If True, returns tuple of ints.
+                     If False, returns tuple of Post/Reply objects.
+    :return: Tuple of posts (Post/Reply objects if ids_only=False) or tuple of post IDs (ints if ids_only=True)
+        """
+
+        # MAKE POST AND REPLIES VALIDATION AND RETURN CORRECT VERSIONS
+
+        if sort:
+            sort_validation(sort)
+        if timeframe:
+            timeframe_validation(timeframe)
+        if country_code:
+            country_code_validation(country_code)
+
+        got_posts = 0
+
+        returned_data = []
+
+        posts = await self.session.get(path=f"country_feed/{country_code}?ids_only={'true' if ids_only else 'false'}&sort={sort or 'latest'}&timeframe={timeframe or ''}")
+        cursor = posts["next_cursor"]
+        if ids_only:
+            for post_id in posts["posts"]:
+                if got_posts >= limit:
+                    return tuple(returned_data)
+                returned_data.append(post_id)
+                got_posts += 1
+        else:
+            for post_data in posts["posts"]:
+                if got_posts >= limit:
+                    return tuple(returned_data)
+                returned_data.append(Post(**post_data))
+                got_posts += 1
+
+        has_more = posts["has_more"]
+        while got_posts < limit and has_more:
+            posts = await self.session.get(
+                path=f"country_feed/{country_code}?ids_only={'true' if ids_only else 'false'}&cursor={cursor}&sort={sort or 'latest'}&timeframe={timeframe or ''}")
             cursor = posts["next_cursor"]
             has_more = posts["has_more"]
             if ids_only:
