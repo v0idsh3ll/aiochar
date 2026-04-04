@@ -1,49 +1,57 @@
 import aiohttp
 from aiochar.exceptions import CharBadRequest, APIError, InvalidKey, NotFoundPost
 from asyncio import sleep
+from typing import Any, Dict, Optional
+
 
 def snake_to_camel(name: str) -> str:
     parts = name.split('_')
     return ''.join(word.capitalize() for word in parts)
 
+
 class BaseSession:
     def __init__(
             self,
-            base_url="https://char.social/api/v1/",
-            base_headers=None):
+            base_url: str = "https://char.social/api/v1/",
+            base_headers: Optional[Dict[str, str]] = None) -> None:
         self.base_url = base_url
-        self._session: aiohttp.ClientSession | None = None
+        self._session: Optional[aiohttp.ClientSession] = None
         self._base_headers = base_headers
 
     async def get_session(self) -> aiohttp.ClientSession:
+        """Get or create aiohttp session."""
         if self._session is None or self._session.closed:
             self._session = aiohttp.ClientSession()
         return self._session
 
-    async def close(self):
+    async def close(self) -> None:
+        """Close aiohttp session."""
         if self._session and not self._session.closed:
             await self._session.close()
 
-    async def get(self,
-                  path: str,
-                  **kwargs) -> dict[str, ...]:
-        """
-        Get request
+    async def get(self, path: str, **kwargs) -> Dict[str, Any]:
+        """Send GET request to API endpoint.
+
         :param path: Path after https://char.social/api/v1/
-        :return: Response
+        :return: JSON response as dictionary
+        :raises APIError: When response is not valid JSON
+        :raises InvalidKey: When API key is invalid
+        :raises NotFoundPost: When post not found
+        :raises CharBadRequest: When request is malformed
         """
         session = await self.get_session()
         status = 0
         delay = 1
-        while status == 503 or status == 0:
+        while status not in (200, 302, 308) or status == 0:
             await sleep(delay)
             delay = min(2 * delay, 60)
-            async with session.get(url=f"{self.base_url}{path.lstrip('/')}", headers=self._base_headers, **kwargs) as response:
+            async with session.get(url=f"{self.base_url}{path.lstrip('/')}", headers=self._base_headers,
+                                   **kwargs) as response:
                 status = response.status
                 try:
                     json_format = await response.json()
                 except Exception:
-                    raise APIError("Invalid JSON response")
+                    continue
 
                 if response.status == 400:
                     raise CharBadRequest
@@ -64,26 +72,29 @@ class BaseSession:
                 response.raise_for_status()
                 return json_format
 
-    async def post(self,
-                  path: str,
-                  **kwargs) -> dict[str, ...]:
-        """
-        Get request
+    async def post(self, path: str, **kwargs) -> Dict[str, Any]:
+        """Send POST request to API endpoint.
+
         :param path: Path after https://char.social/api/v1/
-        :return: Response
+        :return: JSON response as dictionary
+        :raises APIError: When response is not valid JSON
+        :raises InvalidKey: When API key is invalid
+        :raises NotFoundPost: When post not found
+        :raises CharBadRequest: When request is malformed
         """
         session = await self.get_session()
         status = 0
         delay = 1
-        while status == 503 or status == 0:
+        while status not in (200, 302, 308) or status == 0:
             await sleep(delay)
-            delay = min(2*delay, 60)
-            async with session.post(url=f"{self.base_url}{path.lstrip('/')}", headers=self._base_headers, **kwargs) as response:
+            delay = min(2 * delay, 60)
+            async with session.post(url=f"{self.base_url}{path.lstrip('/')}", headers=self._base_headers,
+                                    **kwargs) as response:
                 status = response.status
                 try:
                     json_format = await response.json()
                 except Exception:
-                    raise APIError("Invalid JSON response")
+                    continue
 
                 if response.status == 400:
                     raise CharBadRequest
