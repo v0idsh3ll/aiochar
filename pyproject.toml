@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "aiochar"
-version = "0.2.2"
+version = "0.2.3"
 description = "Minimal Char API wrapper"
 authors = [{name="v0idsh3ll"}]
 dependencies = [
