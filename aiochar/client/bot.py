@@ -1,10 +1,11 @@
+import asyncio
 from typing import List
 
 from aiochar.utils.token import validate_token
 from .session.base import BaseSession
 from ..models import Post, User, Reply
 
-from .utils import sort_validation, timeframe_validation, country_code_validation
+from .utils import sort_validation, timeframe_validation, country_code_validation, post_format_validation
 
 
 class Bot:
@@ -54,6 +55,8 @@ class Bot:
         :return: Post with returned data
         """
         raw = await self.session.get(path=f"post/{post_id}")
+
+        raw = raw["post"]
 
         return Post(**raw)
 
@@ -333,6 +336,29 @@ class Bot:
 
 
     #POST METHODS
+
+    async def create_post(
+            self,
+            content: str = "",
+            poll_options: list[str] | tuple[str, ...] = ()
+    ) -> Post:
+        """
+        Create a post (not reply or repost)
+
+        :param content: Text of post. Max: 1024 symbols.
+        :param poll_options: Poll_options. Max: 200 symbols for poll option content and max 4 poll options.
+        :return: Post with created post data
+        """
+        post_format_validation(content, poll_options)
+
+        data = {"content": content, "poll_options": poll_options}
+
+        created_post_data = await self.session.post(path="post", json=data)
+        created_post_id = created_post_data["post_id"]
+
+        created_post = await self.get_post(created_post_id)
+
+        return created_post
 
     # async def like_post(
     #         self,
