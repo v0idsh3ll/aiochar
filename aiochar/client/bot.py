@@ -111,29 +111,30 @@ class Bot:
 
     #POST METHODS
 
-    async def like_post(
-            self,
-            post: Post | None = None,
-            post_id: int | None = None) -> dict:
-        """
-        Like a post by id
+    # async def like_post(
+    #         self,
+    #         post: Post | None = None,
+    #         post_id: int | None = None) -> dict:
+    #     """
+    #     Like a post by id
+    #
+    #     :param post: Post you can get by Bot.post() or similar
+    #     :param post_id: Post_id, int
+    #     :return: like_count, liked, post_id, success
+    #     :raise: NotFoundPost when not found post API error, NoEnoughData when no post and no post_id
+    #     """
+    #     if not post and not post_id:
+    #         raise NoEnoughData
+    #
+    #     data = {
+    #         "post_id": post_id
+    #     }
+    #
+    #     raw = await self.session.post(path="like_post", data=data)
+    #
+    #     return raw
 
-        :param post: Post you can get by Bot.post() or similar
-        :param post_id: Post_id, int
-        :return: like_count, liked, post_id, success
-        :raise: NotFoundPost when not found post API error, NoEnoughData when no post and no post_id
-        """
-        if not post and not post_id:
-            raise NoEnoughData
-
-        data = {
-            "post_id": post_id
-        }
-
-        raw = await self.session.post(path="like_post", data=data)
-
-        return raw
-
+    # NOT THE AIOHTTP METHODS
 
     async def close(self) -> None:
         """
