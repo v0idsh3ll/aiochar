@@ -4,7 +4,7 @@ from datetime import datetime
 class Post:
     def __init__(
         self,
-        post_id: int,
+        id: int,
         user_id: int,
         username: str,
         api_bot: bool,
@@ -22,10 +22,13 @@ class Post:
         hashtags: list[str],
         mentions: list[str],
         repost_of_id: int | None = None,
-        repost_text: str | None = None
-    ) -> None:
+        repost_text: str | None = None,
+        **kwargs) -> None:
 
-        self.post_id = int(post_id)
+        for key, value in kwargs.items():
+            setattr(self, key, value)
+
+        self.id = int(id)
         self.user_id = int(user_id)
         self.username = str(username)
 
@@ -38,7 +41,7 @@ class Post:
         try:
             self.created_at_iso = datetime.fromisoformat(created_at_iso.replace("Z", "+00:00"))
         except Exception:
-            self.created_at = None
+            self.created_at_iso = None
 
         self.country_code = country_code or "??"
 
@@ -63,27 +66,10 @@ class Post:
 
         :return: Dict with post data
         """
-        return {
-            "post_id": self.post_id,
-            "user_id": self.user_id,
-            "username": self.username,
-            "api_bot": self.api_bot,
-            "flair": self.flair,
-            "content": self.content,
-            "content_html": self.content_html,
-            "created_at_iso": self.created_at_iso.isoformat() if self.created_at_iso else None,
-            "country_code": self.country_code,
-            "like_post_id": self.like_post_id,
-            "like_count": self.like_count,
-            "reply_count": self.reply_count,
-            "repost_count": self.repost_count,
-            "is_liked": self.is_liked,
-            "is_own_post": self.is_own_post,
-            "hashtags": self.hashtags,
-            "mentions": self.mentions,
-            "repost_of_id": self.repost_of_id,
-            "repost_text": self.repost_text
-        }
+        result = self.__dict__.copy()
+        if result.get("created_at_iso"):
+            result["created_at_iso"] = result["created_at_iso"].isoformat()
+        return result
 
     def __str__(self):
         return str(self.to_dict())

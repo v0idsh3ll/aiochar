@@ -52,11 +52,61 @@ class Bot:
         """
         raw = await self.session.get(path=f"post/{post_id}")
 
-        params = ("id", "user_id", "username", "api_bot", "flair", "content", "content_html", "created_at_iso", "country_code", "like_post_id", "like_count", "reply_count", "repost_count", "is_liked", "is_own_post", "hashtags", "mentions", "repost_of_id", "repost_text")
+        return Post(**raw)
 
-        data = {key: raw["post"][key] for key in params}
-        data["post_id"] = data.pop("id")
-        return Post(**data)
+    async def get_user_posts(
+            self,
+            user_id: int,
+            limit: int,
+            ids_only: bool = False) -> tuple[Post] | tuple[int]:
+        """
+        Abstract (not the raw API) method to get user posts by limit
+
+        :param user_id: User's ID. May be here: https://char.social/u/USER_ID
+        :param limit: Limit to get posts. Get last LIMIT posts.
+        :param ids_only: Return only post ids without any other data
+        :return: Tuple of user posts
+        """
+        got_posts = 0
+
+        before_id = None
+
+        returned_data = []
+
+        posts = await self.session.get(path=f"user_feed/{user_id}?ids_only={'true' if ids_only else 'false'}")
+        before_id = posts["next_before_id"]
+        if ids_only:
+            for post_id in posts["posts"]:
+                if got_posts >= limit:
+                    return tuple(returned_data)
+                returned_data.append(post_id)
+                got_posts += 1
+        else:
+            for post_data in posts["posts"]:
+                if got_posts >= limit:
+                    return tuple(returned_data)
+                returned_data.append(Post(**post_data))
+                got_posts += 1
+
+        has_more = posts["has_more"]
+        while got_posts < limit and has_more:
+            posts = await self.session.get(path=f"user_feed/{user_id}?ids_only={'true' if ids_only else 'false'}&before_id={before_id}")
+            before_id = posts["next_before_id"]
+            has_more = posts["has_more"]
+            if ids_only:
+                for post_id in posts["posts"]:
+                    if got_posts >= limit:
+                        return tuple(returned_data)
+                    returned_data.append(post_id)
+                    got_posts += 1
+            else:
+                for post_data in posts["posts"]:
+                    if got_posts >= limit:
+                        return tuple(returned_data)
+                    returned_data.append(Post(**post_data))
+                    got_posts += 1
+
+        return tuple(returned_data)
 
 
     #POST METHODS
