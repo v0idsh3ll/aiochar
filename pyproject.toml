@@ -24,3 +24,6 @@ dependencies = [
     "yarl==1.23.0",
     "aiolimiter==1.2.1"
 ]
+
+[project.urls]
+Repository = "https://github.com/v0idsh3ll/aiochar"
