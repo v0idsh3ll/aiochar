@@ -1,4 +1,4 @@
-from ..exceptions import InvalidSort, InvalidTimeFrame, InvalidCountryCode, InvalidPostContent, InvalidPollContent, InvalidPollOptions, InvalidPostFormat
+from ..exceptions import InvalidSort, InvalidTimeFrame, InvalidCountryCode, InvalidPostContent, InvalidPollContent, InvalidPollOptions, InvalidPostFormat, InvalidCategory
 
 def sort_validation(sort) -> bool:
     if sort not in ('latest', 'popular', 'likes'):
@@ -36,3 +36,7 @@ def post_format_validation(content, poll_options):
     post_content_validation(content)
 
     poll_options_validation(poll_options)
+
+def leaderboard_category_validation(category):
+    if category not in ("posts","likes","reposts","followers","mutes","followed_tags","muted_tags"):
+        raise InvalidCategory

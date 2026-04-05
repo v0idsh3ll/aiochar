@@ -47,3 +47,7 @@ class InvalidPollOptions(BaseAiocharException):
 class InvalidPostFormat(BaseAiocharException):
     def __init__(self):
         super().__init__("Wrong post. You must provide at least one of content or poll_options")
+
+class InvalidCategory(BaseAiocharException):
+    def __init__(self):
+        super().__init__("Wrong category. Available are: 'posts','likes','reposts','followers','mutes','followed_tags','muted_tags'")

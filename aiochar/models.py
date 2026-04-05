@@ -235,3 +235,26 @@ class User:
 
     def __repr__(self):
         return str(self.to_dict())
+
+class Hashtag:
+    """Main class to contain hashtags."""
+
+    def __init__(
+            self,
+            tag):
+        self.tag = tag
+
+    def to_dict(self) -> dict:
+        """
+        Convert a hashtag to a dict
+
+        :return: Dict with hashtag data
+        """
+        result = self.__dict__.copy()
+        return result
+
+    def __str__(self):
+        return str(self.to_dict())
+
+    def __repr__(self):
+        return str(self.to_dict())

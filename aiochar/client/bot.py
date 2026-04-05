@@ -3,9 +3,9 @@ from typing import List
 
 from aiochar.utils.token import validate_token
 from .session.base import BaseSession
-from ..models import Post, User, Reply
+from ..models import Post, User, Reply, Hashtag
 
-from .utils import sort_validation, timeframe_validation, country_code_validation, post_format_validation, post_content_validation
+from .utils import sort_validation, timeframe_validation, country_code_validation, post_format_validation, post_content_validation, leaderboard_category_validation
 
 from ..exceptions import NoEnoughData
 
@@ -172,7 +172,7 @@ class Bot:
 
     async def get_hashtag_feed(
             self,
-            hashtag: str,
+            hashtag: str | Hashtag,
             limit: int = 1,
             sort: str = "latest",
             timeframe: str = "24h",
@@ -402,6 +402,36 @@ class Bot:
         user_data.update(**counted)
 
         return User(**user_data)
+
+    async def get_leaderboard(
+            self,
+            category: str,
+            limit: int = 25,
+            offset: int = 0) -> dict[str, int] | dict[User, int]:
+        """
+        Get leaderboard by category
+
+        :param category: Category to get lb. Available: 'posts','likes','reposts','followers','mutes','followed_tags','muted_tags'.
+        :param limit: Limit. Limit by values to return. Defaults to 25.
+        :param offset: Number of items to skip for pagination. Defaults to 0.
+        :return: dict like {User: int (how many)} or {str: int}.
+        """
+        leaderboard_category_validation(category)
+
+        raw = await self.session.get(path=f"leaderboard?category={category}&offset={offset}&limit={limit}")
+
+        if category.endswith('tags'):
+            tags = {}
+            for value in raw["users"]:
+                tags[Hashtag(value["id"])] = value["count"]
+            return tags
+
+        else:
+            users = {}
+            for value in raw["users"]:
+                user = await self.get_user(user_id=value["id"])
+                users[user] = value["count"]
+            return users
 
 
 
