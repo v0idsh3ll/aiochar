@@ -19,7 +19,7 @@ def post_content_validation(content):
         raise InvalidPostContent
 
 def poll_content_validation(content):
-    if len(content) > 200:
+    if len(content) > 100:
         raise InvalidPollContent
 
 def poll_options_validation(poll_options):
