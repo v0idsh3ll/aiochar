@@ -3,6 +3,9 @@ from aiochar.exceptions import CharBadRequest, APIError, InvalidKey, NotFoundPos
 from asyncio import sleep
 from typing import Any, Dict, Optional
 from aiolimiter import AsyncLimiter
+import logging
+logger = logging.getLogger('aiochar.session')
+logger.addHandler(logging.NullHandler())
 
 limiter = AsyncLimiter(120, 60)
 
@@ -21,6 +24,7 @@ class BaseSession:
         self._session: Optional[aiohttp.ClientSession] = None
         self._base_headers = base_headers
         self._429_delay: float = 1.0
+        logger.info('Session was created')
 
     async def get_session(self) -> aiohttp.ClientSession:
         """Get or create aiohttp session."""
@@ -32,6 +36,7 @@ class BaseSession:
         """Close aiohttp session."""
         if self._session and not self._session.closed:
             await self._session.close()
+            logger.debug('Session is closed')
 
     async def _request(self, method: str, path: str, **kwargs) -> Dict[str, Any]:
         """Send HTTP request to API endpoint with rate limiting and 429 handling.
@@ -47,42 +52,49 @@ class BaseSession:
         session = await self.get_session()
 
         async with limiter:
-            async with session.request(
-                method=method,
-                url=f"{self.base_url}{path.lstrip('/')}",
-                headers=self._base_headers,
-                **kwargs
-            ) as response:
-                if response.status == 429:
-                    await sleep(self._429_delay)
-                    self._429_delay = min(self._429_delay * 2, 60.0)
-                    return await self._request(method, path, **kwargs)
+            logger.debug(f'Making request with method {method} and path {path}')
+            try:
+                async with session.request(
+                    method=method,
+                    url=f"{self.base_url}{path.lstrip('/')}",
+                    headers=self._base_headers,
+                    **kwargs
+                ) as response:
+                    if response.status == 429:
+                        await sleep(self._429_delay)
+                        self._429_delay = min(self._429_delay * 2, 60.0)
+                        return await self._request(method, path, **kwargs)
 
-                self._429_delay = max(1.0, self._429_delay * 0.9)
+                    self._429_delay = max(1.0, self._429_delay * 0.9)
 
-                try:
-                    json_format = await response.json()
-                except Exception:
-                    text = await response.text()
-                    raise APIError(f"Non-JSON response ({response.status}): {text[:200]}")
+                    try:
+                        json_format = await response.json()
+                    except Exception:
+                        text = await response.text()
+                        raise APIError(f"Non-JSON response ({response.status}): {text[:200]}")
 
-                if response.status == 400:
-                    raise CharBadRequest
+                    if response.status == 400:
+                        raise CharBadRequest
 
-                if "error" in json_format:
-                    code = json_format["error"]["code"]
-                    if code == "invalid_api_key":
-                        raise InvalidKey
-                    elif code == "not_found":
-                        raise NotFoundPost
-                    else:
-                        message = json_format["error"].get("message", "")
-                        exc_name = snake_to_camel(code)
-                        ExcCls = type(exc_name, (APIError,), {})
-                        raise ExcCls(message)
+                    if "error" in json_format:
+                        code = json_format["error"]["code"]
+                        if code == "invalid_api_key":
+                            raise InvalidKey
+                        elif code == "not_found":
+                            raise NotFoundPost
+                        else:
+                            message = json_format["error"].get("message", "")
+                            exc_name = snake_to_camel(code)
+                            ExcCls = type(exc_name, (APIError,), {})
+                            raise ExcCls(message)
 
-                response.raise_for_status()
-                return json_format
+                    response.raise_for_status()
+                    return json_format
+            except (aiohttp.ClientError, aiohttp.ConnectionTimeoutError):
+                logger.error('Connection error')
+                await sleep(self._429_delay)
+                self._429_delay = min(self._429_delay * 2, 60.0)
+                return await self._request(method, path, **kwargs)
 
     async def get(self, path: str, **kwargs) -> Dict[str, Any]:
         """Send GET request to API endpoint.
