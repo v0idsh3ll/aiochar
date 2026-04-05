@@ -5,7 +5,7 @@ from aiochar.utils.token import validate_token
 from .session.base import BaseSession
 from ..models import Post, User, Reply
 
-from .utils import sort_validation, timeframe_validation, country_code_validation, post_format_validation
+from .utils import sort_validation, timeframe_validation, country_code_validation, post_format_validation, post_content_validation
 
 from ..exceptions import NoEnoughData
 
@@ -49,7 +49,7 @@ class Bot:
 
     async def get_post(
              self,
-             post_id: int) -> Post:
+             post_id: int) -> Post | Reply:
         """
         Get Post and its data by post_id
 
@@ -60,7 +60,7 @@ class Bot:
 
         raw = raw["post"]
 
-        return Post(**raw)
+        return Post(**raw) if not "parent_post_id" in raw else Reply(**raw)
 
     async def get_user_posts(
             self,
@@ -361,6 +361,37 @@ class Bot:
         created_post = await self.get_post(created_post_id)
 
         return created_post
+
+    async def create_reply(
+            self,
+            content: str,
+            post: Post | None = None,
+            post_id: int | None = None) -> Reply:
+        """
+        Reply to a post by id or Post()
+
+        :param content: Text of reply. Max: 1024 symbols.
+        :param post: Post() can be obtained with get_post or get feeds methods
+        :param post_id: Integer with post ID
+        :return: Reply() with reply data
+        """
+        post_content_validation(content)
+
+        if not post and not post_id:
+            raise NoEnoughData
+
+        if post:
+            post_id = post.id
+
+        data = {"content": content}
+        created_reply = await self.session.post(f"post/{post_id}/reply", json=data)
+        created_reply_id = created_reply["post_id"]
+        created_reply = await self.get_post(created_reply_id)
+
+        return created_reply
+
+
+
 
     async def follow_user(
             self,
