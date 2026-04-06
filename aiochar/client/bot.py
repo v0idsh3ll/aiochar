@@ -739,6 +739,54 @@ class Bot:
         followed = await self.session.post("unmute_user", json=data)
         return followed["success"]
 
+    async def follow_hashtag(
+            self,
+            hashtag: str | Hashtag) -> bool:
+        if isinstance(hashtag, Hashtag):
+            hashtag = hashtag.tag
+
+        data = {"hashtag": hashtag}
+
+        raw = await self.session.post(path="follow_tag", json=data)
+
+        return raw["success"]
+
+    async def unfollow_hashtag(
+            self,
+            hashtag: str | Hashtag) -> bool:
+        if isinstance(hashtag, Hashtag):
+            hashtag = hashtag.tag
+
+        data = {"hashtag": hashtag}
+
+        raw = await self.session.post(path="unfollow_tag", json=data)
+
+        return raw["success"]
+
+    async def mute_hashtag(
+            self,
+            hashtag: str | Hashtag) -> bool:
+        if isinstance(hashtag, Hashtag):
+            hashtag = hashtag.tag
+
+        data = {"hashtag": hashtag}
+
+        raw = await self.session.post(path="mute_tag", json=data)
+
+        return raw["success"]
+
+    async def unmute_hashtag(
+            self,
+            hashtag: str | Hashtag) -> bool:
+        if isinstance(hashtag, Hashtag):
+            hashtag = hashtag.tag
+
+        data = {"hashtag": hashtag}
+
+        raw = await self.session.post(path="unmute_tag", json=data)
+
+        return raw["success"]
+
     # async def like_post(
     #         self,
     #         post: Post | None = None,
