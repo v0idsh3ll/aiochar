@@ -433,7 +433,167 @@ class Bot:
                 users[user] = value["count"]
             return users
 
+    async def get_following(
+            self,
+            limit: int = 1,
+            user_id: int | None = None,
+            user: User | None = None) -> tuple[User, ...]:
+        """
+        Get users who user follows.
 
+        :param limit: Maximum number of users to retrieve. Gets last LIMIT users. 1 by default
+        :param user_id: user_id of user you want to get followings
+        :param user: User you want to get followings
+        :return: Tuple of users who provided user follows
+        """
+        if not user and not user_id:
+            raise NoEnoughData
+
+        if user:
+            user_id = user.id
+
+        raw = await self.session.get(path=f"user/{user_id}/following?limit={limit}")
+        users = []
+
+        for user_ in raw["users"]:
+            users.append(await self.get_user(user_))
+
+        return tuple(users)
+
+    async def get_followers(
+            self,
+            limit: int = 1,
+            user_id: int | None = None,
+            user: User | None = None) -> tuple[User, ...]:
+        """
+        Get users who are followed to a user.
+
+        :param limit: Maximum number of users to retrieve. Gets last LIMIT users. 1 by default
+        :param user_id: user_id of user you want to get followers
+        :param user: User you want to get followers
+        :return: Tuple of users who followed to provided user
+        """
+        if not user and not user_id:
+            raise NoEnoughData
+
+        if user:
+            user_id = user.id
+
+        raw = await self.session.get(path=f"user/{user_id}/followers?limit={limit}")
+        users = []
+
+        for user_ in raw["users"]:
+            users.append(await self.get_user(user_))
+
+        return tuple(users)
+
+    async def get_muting(
+            self,
+            limit: int = 1,
+            user_id: int | None = None,
+            user: User | None = None) -> tuple[User, ...]:
+        """
+        Get users who user mutes.
+
+        :param limit: Maximum number of users to retrieve. Gets last LIMIT users. 1 by default
+        :param user_id: user_id of user you want to get mutes
+        :param user: User you want to get mutes
+        :return: Tuple of users who provided user mutes
+        """
+        if not user and not user_id:
+            raise NoEnoughData
+
+        if user:
+            user_id = user.id
+
+        raw = await self.session.get(path=f"user/{user_id}/muting?limit={limit}")
+        users = []
+
+        for user_ in raw["users"]:
+            users.append(await self.get_user(user_))
+
+        return tuple(users)
+
+    async def get_muted_by(
+            self,
+            limit: int = 1,
+            user_id: int | None = None,
+            user: User | None = None) -> tuple[User, ...]:
+        """
+        Get users who muted a user.
+
+        :param limit: Maximum number of users to retrieve. Gets last LIMIT users. 1 by default
+        :param user_id: user_id of user you want to get muters
+        :param user: User you want to get muters
+        :return: Tuple of users who mutes provided user
+        """
+        if not user and not user_id:
+            raise NoEnoughData
+
+        if user:
+            user_id = user.id
+
+        raw = await self.session.get(path=f"user/{user_id}/muted_by?limit={limit}")
+        users = []
+
+        for user_ in raw["users"]:
+            users.append(await self.get_user(user_))
+
+        return tuple(users)
+
+    async def get_followed_tags(
+            self,
+            limit: int = 1,
+            user_id: int | None = None,
+            user: User | None = None) -> tuple[Hashtag, ...]:
+        """
+        Get tags a user follows
+
+        :param limit: Maximum number of tags to retrieve. Gets last LIMIT users. 1 by default
+        :param user_id: user_id of user you want to get followed tags
+        :param user: User you want to get followed tags
+        :return: Tuple with Hashtags
+        """
+        if not user and not user_id:
+            raise NoEnoughData
+
+        if user:
+            user_id = user.id
+
+        raw = await self.session.get(path=f"user/{user_id}/followed_tags?limit={limit}")
+        tags = []
+
+        for tag in raw["tags"]:
+            tags.append(Hashtag(tag))
+
+        return tuple(tags)
+
+    async def get_muted_tags(
+            self,
+            limit: int = 1,
+            user_id: int | None = None,
+            user: User | None = None) -> tuple[Hashtag, ...]:
+        """
+        Get tags a user mutes
+
+        :param limit: Maximum number of tags to retrieve. Gets last LIMIT users. 1 by default
+        :param user_id: user_id of user you want to get muted tags
+        :param user: User you want to get muted tags
+        :return: Tuple with Hashtags
+        """
+        if not user and not user_id:
+            raise NoEnoughData
+
+        if user:
+            user_id = user.id
+
+        raw = await self.session.get(path=f"user/{user_id}/muted_tags?limit={limit}")
+        tags = []
+
+        for tag in raw["tags"]:
+            tags.append(Hashtag(tag))
+
+        return tuple(tags)
 
     #POST METHODS
 
