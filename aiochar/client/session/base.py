@@ -1,5 +1,5 @@
 import aiohttp
-from aiochar.exceptions import CharBadRequest, APIError, InvalidKey, NotFoundPost
+from aiochar.exceptions import CharBadRequest, APIError, InvalidKey, NotFound
 from asyncio import sleep
 from typing import Any, Dict, Optional
 from aiolimiter import AsyncLimiter
@@ -81,7 +81,7 @@ class BaseSession:
                         if code == "invalid_api_key":
                             raise InvalidKey
                         elif code == "not_found":
-                            raise NotFoundPost
+                            raise NotFound
                         else:
                             message = json_format["error"].get("message", "")
                             exc_name = snake_to_camel(code)

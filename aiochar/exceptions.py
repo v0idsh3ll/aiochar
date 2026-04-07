@@ -5,9 +5,9 @@ class InvalidKey(BaseAiocharException):
     def __init__(self):
         super().__init__("API key is missing or invalid.")
 
-class NotFoundPost(BaseAiocharException):
+class NotFound(BaseAiocharException):
     def __init__(self):
-        super().__init__("Post not found.")
+        super().__init__("Not found data.")
 
 class NoEnoughData(BaseAiocharException):
     def __init__(self):

@@ -65,7 +65,7 @@ el.replaceWith(d);
 <dl>
 <dt id="aiochar.client.session.base.BaseSession"><code class="flex name class">
 <span>class <span class="ident">BaseSession</span></span>
-<span>(</span><span>base_url='https://char.social/api/v1/', base_headers=None)</span>
+<span>(</span><span>base_url: str = 'https://char.social/api/v1/',<br>base_headers: Dict[str, str] | None = None)</span>
 </code></dt>
 <dd>
 <details class="source">
@@ -75,146 +75,154 @@ el.replaceWith(d);
 <pre><code class="python">class BaseSession:
     def __init__(
             self,
-            base_url=&#34;https://char.social/api/v1/&#34;,
-            base_headers=None):
+            base_url: str = &#34;https://char.social/api/v1/&#34;,
+            base_headers: Optional[Dict[str, str]] = None) -&gt; None:
         self.base_url = base_url
-        self._session: aiohttp.ClientSession | None = None
+        self._session: Optional[aiohttp.ClientSession] = None
         self._base_headers = base_headers
+        self._429_delay: float = 1.0
+        logger.info(&#39;Session was created&#39;)
 
     async def get_session(self) -&gt; aiohttp.ClientSession:
+        &#34;&#34;&#34;Get or create aiohttp session.&#34;&#34;&#34;
         if self._session is None or self._session.closed:
             self._session = aiohttp.ClientSession()
         return self._session
 
-    async def close(self):
+    async def close(self) -&gt; None:
+        &#34;&#34;&#34;Close aiohttp session.&#34;&#34;&#34;
         if self._session and not self._session.closed:
             await self._session.close()
+            logger.debug(&#39;Session is closed&#39;)
 
-    async def get(self,
-                  path: str,
-                  **kwargs) -&gt; dict[str, ...]:
-        &#34;&#34;&#34;
-        Get request
+    async def _request(self, method: str, path: str, **kwargs) -&gt; Dict[str, Any]:
+        &#34;&#34;&#34;Send HTTP request to API endpoint with rate limiting and 429 handling.
+
+        :param method: HTTP method (GET or POST)
         :param path: Path after https://char.social/api/v1/
-        :return: Response
+        :return: JSON response as dictionary
+        :raises APIError: When response is not valid JSON
+        :raises InvalidKey: When API key is invalid
+        :raises NotFoundPost: When post not found
+        :raises CharBadRequest: When request is malformed
         &#34;&#34;&#34;
         session = await self.get_session()
-        async with session.get(url=f&#34;{self.base_url}{path.lstrip(&#39;/&#39;)}&#34;, headers=self._base_headers, **kwargs) as response:
+
+        async with limiter:
+            logger.debug(f&#39;Making request with method {method} and path {path}&#39;)
             try:
-                json_format = await response.json()
-            except Exception:
-                raise APIError(&#34;Invalid JSON response&#34;)
+                async with session.request(
+                    method=method,
+                    url=f&#34;{self.base_url}{path.lstrip(&#39;/&#39;)}&#34;,
+                    headers=self._base_headers,
+                    **kwargs
+                ) as response:
+                    if response.status == 429:
+                        await sleep(self._429_delay)
+                        self._429_delay = min(self._429_delay * 2, 60.0)
+                        return await self._request(method, path, **kwargs)
 
-            if response.status == 400:
-                raise CharBadRequest
-            if &#34;error&#34; in json_format:
-                code = json_format[&#34;error&#34;][&#34;code&#34;]
-                if code == &#34;invalid_api_key&#34;:
-                    raise InvalidKey
-                elif code == &#34;not_found&#34;:
-                    raise NotFoundPost
-                else:
-                    code = json_format[&#34;error&#34;][&#34;code&#34;]
-                    message = json_format[&#34;error&#34;].get(&#34;message&#34;, &#34;&#34;)
+                    self._429_delay = max(1.0, self._429_delay * 0.9)
 
-                    exc_name = snake_to_camel(code)
-                    ExcCls = type(exc_name, (APIError,), {})
-                    raise ExcCls(message)
+                    try:
+                        json_format = await response.json()
+                    except Exception:
+                        text = await response.text()
+                        raise APIError(f&#34;Non-JSON response ({response.status}): {text[:200]}&#34;)
 
-            response.raise_for_status()
-            return json_format
+                    if response.status == 400:
+                        raise CharBadRequest
 
-    async def post(self,
-                  path: str,
-                  **kwargs) -&gt; dict[str, ...]:
-        &#34;&#34;&#34;
-        Get request
+                    if &#34;error&#34; in json_format:
+                        code = json_format[&#34;error&#34;][&#34;code&#34;]
+                        if code == &#34;invalid_api_key&#34;:
+                            raise InvalidKey
+                        elif code == &#34;not_found&#34;:
+                            raise NotFound
+                        else:
+                            message = json_format[&#34;error&#34;].get(&#34;message&#34;, &#34;&#34;)
+                            exc_name = snake_to_camel(code)
+                            ExcCls = type(exc_name, (APIError,), {})
+                            raise ExcCls(message)
+
+                    response.raise_for_status()
+                    return json_format
+            except (aiohttp.ClientError, aiohttp.ConnectionTimeoutError):
+                logger.error(&#39;Connection error&#39;)
+                await sleep(self._429_delay)
+                self._429_delay = min(self._429_delay * 2, 60.0)
+                return await self._request(method, path, **kwargs)
+
+    async def get(self, path: str, **kwargs) -&gt; Dict[str, Any]:
+        &#34;&#34;&#34;Send GET request to API endpoint.
+
         :param path: Path after https://char.social/api/v1/
-        :return: Response
+        :return: JSON response as dictionary
+        :raises APIError: When response is not valid JSON
+        :raises InvalidKey: When API key is invalid
+        :raises NotFoundPost: When post not found
+        :raises CharBadRequest: When request is malformed
         &#34;&#34;&#34;
-        session = await self.get_session()
-        async with session.post(url=f&#34;{self.base_url}{path.lstrip(&#39;/&#39;)}&#34;, headers=self._base_headers, **kwargs) as response:
-            try:
-                json_format = await response.json()
-            except Exception:
-                raise APIError(&#34;Invalid JSON response&#34;)
+        return await self._request(&#34;GET&#34;, path, **kwargs)
 
-            if response.status == 400:
-                raise CharBadRequest
-            if &#34;error&#34; in json_format:
-                code = json_format[&#34;error&#34;][&#34;code&#34;]
-                if code == &#34;invalid_api_key&#34;:
-                    raise InvalidKey
-                elif code == &#34;not_found&#34;:
-                    raise NotFoundPost
-                else:
-                    raise APIError(json_format.get(&#34;error&#34;, {}))
+    async def post(self, path: str, **kwargs) -&gt; Dict[str, Any]:
+        &#34;&#34;&#34;Send POST request to API endpoint.
 
-            response.raise_for_status()
-            return json_format</code></pre>
+        :param path: Path after https://char.social/api/v1/
+        :return: JSON response as dictionary
+        :raises APIError: When response is not valid JSON
+        :raises InvalidKey: When API key is invalid
+        :raises NotFoundPost: When post not found
+        :raises CharBadRequest: When request is malformed
+        &#34;&#34;&#34;
+        return await self._request(&#34;POST&#34;, path, **kwargs)</code></pre>
 </details>
 <div class="desc"></div>
 <h3>Methods</h3>
 <dl>
 <dt id="aiochar.client.session.base.BaseSession.close"><code class="name flex">
-<span>async def <span class="ident">close</span></span>(<span>self)</span>
+<span>async def <span class="ident">close</span></span>(<span>self) ‑> None</span>
 </code></dt>
 <dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">async def close(self):
+<pre><code class="python">async def close(self) -&gt; None:
+    &#34;&#34;&#34;Close aiohttp session.&#34;&#34;&#34;
     if self._session and not self._session.closed:
-        await self._session.close()</code></pre>
+        await self._session.close()
+        logger.debug(&#39;Session is closed&#39;)</code></pre>
 </details>
-<div class="desc"></div>
+<div class="desc"><p>Close aiohttp session.</p></div>
 </dd>
 <dt id="aiochar.client.session.base.BaseSession.get"><code class="name flex">
-<span>async def <span class="ident">get</span></span>(<span>self, path: str, **kwargs) ‑> dict[str, ...]</span>
+<span>async def <span class="ident">get</span></span>(<span>self, path: str, **kwargs) ‑> Dict[str, Any]</span>
 </code></dt>
 <dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">async def get(self,
-              path: str,
-              **kwargs) -&gt; dict[str, ...]:
-    &#34;&#34;&#34;
-    Get request
+<pre><code class="python">async def get(self, path: str, **kwargs) -&gt; Dict[str, Any]:
+    &#34;&#34;&#34;Send GET request to API endpoint.
+
     :param path: Path after https://char.social/api/v1/
-    :return: Response
+    :return: JSON response as dictionary
+    :raises APIError: When response is not valid JSON
+    :raises InvalidKey: When API key is invalid
+    :raises NotFoundPost: When post not found
+    :raises CharBadRequest: When request is malformed
     &#34;&#34;&#34;
-    session = await self.get_session()
-    async with session.get(url=f&#34;{self.base_url}{path.lstrip(&#39;/&#39;)}&#34;, headers=self._base_headers, **kwargs) as response:
-        try:
-            json_format = await response.json()
-        except Exception:
-            raise APIError(&#34;Invalid JSON response&#34;)
-
-        if response.status == 400:
-            raise CharBadRequest
-        if &#34;error&#34; in json_format:
-            code = json_format[&#34;error&#34;][&#34;code&#34;]
-            if code == &#34;invalid_api_key&#34;:
-                raise InvalidKey
-            elif code == &#34;not_found&#34;:
-                raise NotFoundPost
-            else:
-                code = json_format[&#34;error&#34;][&#34;code&#34;]
-                message = json_format[&#34;error&#34;].get(&#34;message&#34;, &#34;&#34;)
-
-                exc_name = snake_to_camel(code)
-                ExcCls = type(exc_name, (APIError,), {})
-                raise ExcCls(message)
-
-        response.raise_for_status()
-        return json_format</code></pre>
+    return await self._request(&#34;GET&#34;, path, **kwargs)</code></pre>
 </details>
-<div class="desc"><p>Get request
-:param path: Path after <a href="https://char.social/api/v1/">https://char.social/api/v1/</a>
-:return: Response</p></div>
+<div class="desc"><p>Send GET request to API endpoint.</p>
+<p>:param path: Path after <a href="https://char.social/api/v1/">https://char.social/api/v1/</a>
+:return: JSON response as dictionary
+:raises APIError: When response is not valid JSON
+:raises InvalidKey: When API key is invalid
+:raises NotFoundPost: When post not found
+:raises CharBadRequest: When request is malformed</p></div>
 </dd>
 <dt id="aiochar.client.session.base.BaseSession.get_session"><code class="name flex">
 <span>async def <span class="ident">get_session</span></span>(<span>self) ‑> aiohttp.client.ClientSession</span>
@@ -225,52 +233,40 @@ el.replaceWith(d);
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">async def get_session(self) -&gt; aiohttp.ClientSession:
+    &#34;&#34;&#34;Get or create aiohttp session.&#34;&#34;&#34;
     if self._session is None or self._session.closed:
         self._session = aiohttp.ClientSession()
     return self._session</code></pre>
 </details>
-<div class="desc"></div>
+<div class="desc"><p>Get or create aiohttp session.</p></div>
 </dd>
 <dt id="aiochar.client.session.base.BaseSession.post"><code class="name flex">
-<span>async def <span class="ident">post</span></span>(<span>self, path: str, **kwargs) ‑> dict[str, ...]</span>
+<span>async def <span class="ident">post</span></span>(<span>self, path: str, **kwargs) ‑> Dict[str, Any]</span>
 </code></dt>
 <dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">async def post(self,
-              path: str,
-              **kwargs) -&gt; dict[str, ...]:
-    &#34;&#34;&#34;
-    Get request
+<pre><code class="python">async def post(self, path: str, **kwargs) -&gt; Dict[str, Any]:
+    &#34;&#34;&#34;Send POST request to API endpoint.
+
     :param path: Path after https://char.social/api/v1/
-    :return: Response
+    :return: JSON response as dictionary
+    :raises APIError: When response is not valid JSON
+    :raises InvalidKey: When API key is invalid
+    :raises NotFoundPost: When post not found
+    :raises CharBadRequest: When request is malformed
     &#34;&#34;&#34;
-    session = await self.get_session()
-    async with session.post(url=f&#34;{self.base_url}{path.lstrip(&#39;/&#39;)}&#34;, headers=self._base_headers, **kwargs) as response:
-        try:
-            json_format = await response.json()
-        except Exception:
-            raise APIError(&#34;Invalid JSON response&#34;)
-
-        if response.status == 400:
-            raise CharBadRequest
-        if &#34;error&#34; in json_format:
-            code = json_format[&#34;error&#34;][&#34;code&#34;]
-            if code == &#34;invalid_api_key&#34;:
-                raise InvalidKey
-            elif code == &#34;not_found&#34;:
-                raise NotFoundPost
-            else:
-                raise APIError(json_format.get(&#34;error&#34;, {}))
-
-        response.raise_for_status()
-        return json_format</code></pre>
+    return await self._request(&#34;POST&#34;, path, **kwargs)</code></pre>
 </details>
-<div class="desc"><p>Get request
-:param path: Path after <a href="https://char.social/api/v1/">https://char.social/api/v1/</a>
-:return: Response</p></div>
+<div class="desc"><p>Send POST request to API endpoint.</p>
+<p>:param path: Path after <a href="https://char.social/api/v1/">https://char.social/api/v1/</a>
+:return: JSON response as dictionary
+:raises APIError: When response is not valid JSON
+:raises InvalidKey: When API key is invalid
+:raises NotFoundPost: When post not found
+:raises CharBadRequest: When request is malformed</p></div>
 </dd>
 </dl>
 </dd>

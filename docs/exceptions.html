@@ -89,9 +89,17 @@ el.replaceWith(d);
 <ul class="hlist">
 <li><a title="aiochar.exceptions.APIError" href="#aiochar.exceptions.APIError">APIError</a></li>
 <li><a title="aiochar.exceptions.CharBadRequest" href="#aiochar.exceptions.CharBadRequest">CharBadRequest</a></li>
+<li><a title="aiochar.exceptions.InvalidCategory" href="#aiochar.exceptions.InvalidCategory">InvalidCategory</a></li>
+<li><a title="aiochar.exceptions.InvalidCountryCode" href="#aiochar.exceptions.InvalidCountryCode">InvalidCountryCode</a></li>
 <li><a title="aiochar.exceptions.InvalidKey" href="#aiochar.exceptions.InvalidKey">InvalidKey</a></li>
+<li><a title="aiochar.exceptions.InvalidPollContent" href="#aiochar.exceptions.InvalidPollContent">InvalidPollContent</a></li>
+<li><a title="aiochar.exceptions.InvalidPollOptions" href="#aiochar.exceptions.InvalidPollOptions">InvalidPollOptions</a></li>
+<li><a title="aiochar.exceptions.InvalidPostContent" href="#aiochar.exceptions.InvalidPostContent">InvalidPostContent</a></li>
+<li><a title="aiochar.exceptions.InvalidPostFormat" href="#aiochar.exceptions.InvalidPostFormat">InvalidPostFormat</a></li>
+<li><a title="aiochar.exceptions.InvalidSort" href="#aiochar.exceptions.InvalidSort">InvalidSort</a></li>
+<li><a title="aiochar.exceptions.InvalidTimeFrame" href="#aiochar.exceptions.InvalidTimeFrame">InvalidTimeFrame</a></li>
 <li><a title="aiochar.exceptions.NoEnoughData" href="#aiochar.exceptions.NoEnoughData">NoEnoughData</a></li>
-<li><a title="aiochar.exceptions.NotFoundPost" href="#aiochar.exceptions.NotFoundPost">NotFoundPost</a></li>
+<li><a title="aiochar.exceptions.NotFound" href="#aiochar.exceptions.NotFound">NotFound</a></li>
 </ul>
 </dd>
 <dt id="aiochar.exceptions.CharBadRequest"><code class="flex name class">
@@ -105,6 +113,46 @@ el.replaceWith(d);
 </summary>
 <pre><code class="python">class CharBadRequest(BaseAiocharException):
     pass</code></pre>
+</details>
+<div class="desc"><p>Common base class for all non-exit exceptions.</p></div>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="aiochar.exceptions.BaseAiocharException" href="#aiochar.exceptions.BaseAiocharException">BaseAiocharException</a></li>
+<li>builtins.Exception</li>
+<li>builtins.BaseException</li>
+</ul>
+</dd>
+<dt id="aiochar.exceptions.InvalidCategory"><code class="flex name class">
+<span>class <span class="ident">InvalidCategory</span></span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class InvalidCategory(BaseAiocharException):
+    def __init__(self):
+        super().__init__(&#34;Wrong category. Available are: &#39;posts&#39;,&#39;likes&#39;,&#39;reposts&#39;,&#39;followers&#39;,&#39;mutes&#39;,&#39;followed_tags&#39;,&#39;muted_tags&#39;&#34;)</code></pre>
+</details>
+<div class="desc"><p>Common base class for all non-exit exceptions.</p></div>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="aiochar.exceptions.BaseAiocharException" href="#aiochar.exceptions.BaseAiocharException">BaseAiocharException</a></li>
+<li>builtins.Exception</li>
+<li>builtins.BaseException</li>
+</ul>
+</dd>
+<dt id="aiochar.exceptions.InvalidCountryCode"><code class="flex name class">
+<span>class <span class="ident">InvalidCountryCode</span></span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class InvalidCountryCode(BaseAiocharException):
+    def __init__(self):
+        super().__init__(&#34;Wrong country_code. All codes: (&#39;AD&#39;, &#39;AE&#39;, &#39;AF&#39;, &#39;AG&#39;, &#39;AI&#39;, &#39;AL&#39;, &#39;AM&#39;, &#39;AO&#39;, &#39;AQ&#39;, &#39;AR&#39;, &#39;AS&#39;, &#39;AT&#39;, &#39;AU&#39;, &#39;AW&#39;, &#39;AX&#39;, &#39;AZ&#39;, &#39;BA&#39;, &#39;BB&#39;, &#39;BD&#39;, &#39;BE&#39;, &#39;BF&#39;, &#39;BG&#39;, &#39;BH&#39;, &#39;BI&#39;, &#39;BJ&#39;, &#39;BL&#39;, &#39;BM&#39;, &#39;BN&#39;, &#39;BO&#39;, &#39;BQ&#39;, &#39;BR&#39;, &#39;BS&#39;, &#39;BT&#39;, &#39;BV&#39;, &#39;BW&#39;, &#39;BY&#39;, &#39;BZ&#39;, &#39;CA&#39;, &#39;CC&#39;, &#39;CD&#39;, &#39;CF&#39;, &#39;CG&#39;, &#39;CH&#39;, &#39;CI&#39;, &#39;CK&#39;, &#39;CL&#39;, &#39;CM&#39;, &#39;CN&#39;, &#39;CO&#39;, &#39;CR&#39;, &#39;CU&#39;, &#39;CV&#39;, &#39;CW&#39;, &#39;CX&#39;, &#39;CY&#39;, &#39;CZ&#39;, &#39;DE&#39;, &#39;DJ&#39;, &#39;DK&#39;, &#39;DM&#39;, &#39;DO&#39;, &#39;DZ&#39;, &#39;EC&#39;, &#39;EE&#39;, &#39;EG&#39;, &#39;EH&#39;, &#39;ER&#39;, &#39;ES&#39;, &#39;ET&#39;, &#39;FI&#39;, &#39;FJ&#39;, &#39;FK&#39;, &#39;FM&#39;, &#39;FO&#39;, &#39;FR&#39;, &#39;GA&#39;, &#39;GB&#39;, &#39;GD&#39;, &#39;GE&#39;, &#39;GF&#39;, &#39;GG&#39;, &#39;GH&#39;, &#39;GI&#39;, &#39;GL&#39;, &#39;GM&#39;, &#39;GN&#39;, &#39;GP&#39;, &#39;GQ&#39;, &#39;GR&#39;, &#39;GS&#39;, &#39;GT&#39;, &#39;GU&#39;, &#39;GW&#39;, &#39;GY&#39;, &#39;HK&#39;, &#39;HM&#39;, &#39;HN&#39;, &#39;HR&#39;, &#39;HT&#39;, &#39;HU&#39;, &#39;ID&#39;, &#39;IE&#39;, &#39;IL&#39;, &#39;IM&#39;, &#39;IN&#39;, &#39;IO&#39;, &#39;IQ&#39;, &#39;IR&#39;, &#39;IS&#39;, &#39;IT&#39;, &#39;JE&#39;, &#39;JM&#39;, &#39;JO&#39;, &#39;JP&#39;, &#39;KE&#39;, &#39;KG&#39;, &#39;KH&#39;, &#39;KI&#39;, &#39;KM&#39;, &#39;KN&#39;, &#39;KP&#39;, &#39;KR&#39;, &#39;KW&#39;, &#39;KY&#39;, &#39;KZ&#39;, &#39;LA&#39;, &#39;LB&#39;, &#39;LC&#39;, &#39;LI&#39;, &#39;LK&#39;, &#39;LR&#39;, &#39;LS&#39;, &#39;LT&#39;, &#39;LU&#39;, &#39;LV&#39;, &#39;LY&#39;, &#39;MA&#39;, &#39;MC&#39;, &#39;MD&#39;, &#39;ME&#39;, &#39;MF&#39;, &#39;MG&#39;, &#39;MH&#39;, &#39;MK&#39;, &#39;ML&#39;, &#39;MM&#39;, &#39;MN&#39;, &#39;MO&#39;, &#39;MP&#39;, &#39;MQ&#39;, &#39;MR&#39;, &#39;MS&#39;, &#39;MT&#39;, &#39;MU&#39;, &#39;MV&#39;, &#39;MW&#39;, &#39;MX&#39;, &#39;MY&#39;, &#39;MZ&#39;, &#39;NA&#39;, &#39;NC&#39;, &#39;NE&#39;, &#39;NF&#39;, &#39;NG&#39;, &#39;NI&#39;, &#39;NL&#39;, &#39;NO&#39;, &#39;NP&#39;, &#39;NR&#39;, &#39;NU&#39;, &#39;NZ&#39;, &#39;OM&#39;, &#39;PA&#39;, &#39;PE&#39;, &#39;PF&#39;, &#39;PG&#39;, &#39;PH&#39;, &#39;PK&#39;, &#39;PL&#39;, &#39;PM&#39;, &#39;PN&#39;, &#39;PR&#39;, &#39;PS&#39;, &#39;PT&#39;, &#39;PW&#39;, &#39;PY&#39;, &#39;QA&#39;, &#39;RE&#39;, &#39;RO&#39;, &#39;RS&#39;, &#39;RU&#39;, &#39;RW&#39;, &#39;SA&#39;, &#39;SB&#39;, &#39;SC&#39;, &#39;SD&#39;, &#39;SE&#39;, &#39;SG&#39;, &#39;SH&#39;, &#39;SI&#39;, &#39;SJ&#39;, &#39;SK&#39;, &#39;SL&#39;, &#39;SM&#39;, &#39;SN&#39;, &#39;SO&#39;, &#39;SR&#39;, &#39;SS&#39;, &#39;ST&#39;, &#39;SV&#39;, &#39;SX&#39;, &#39;SY&#39;, &#39;SZ&#39;, &#39;TC&#39;, &#39;TD&#39;, &#39;TF&#39;, &#39;TG&#39;, &#39;TH&#39;, &#39;TJ&#39;, &#39;TK&#39;, &#39;TL&#39;, &#39;TM&#39;, &#39;TN&#39;, &#39;TO&#39;, &#39;TR&#39;, &#39;TT&#39;, &#39;TV&#39;, &#39;TW&#39;, &#39;TZ&#39;, &#39;UA&#39;, &#39;UG&#39;, &#39;UM&#39;, &#39;US&#39;, &#39;UY&#39;, &#39;UZ&#39;, &#39;VA&#39;, &#39;VC&#39;, &#39;VE&#39;, &#39;VG&#39;, &#39;VI&#39;, &#39;VN&#39;, &#39;VU&#39;, &#39;WF&#39;, &#39;WS&#39;, &#39;YE&#39;, &#39;YT&#39;, &#39;ZA&#39;, &#39;ZM&#39;, &#39;ZW&#39;).&#34;)</code></pre>
 </details>
 <div class="desc"><p>Common base class for all non-exit exceptions.</p></div>
 <h3>Ancestors</h3>
@@ -134,6 +182,126 @@ el.replaceWith(d);
 <li>builtins.BaseException</li>
 </ul>
 </dd>
+<dt id="aiochar.exceptions.InvalidPollContent"><code class="flex name class">
+<span>class <span class="ident">InvalidPollContent</span></span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class InvalidPollContent(BaseAiocharException):
+    def __init__(self):
+        super().__init__(&#34;Wrong poll content. Check that length of content you provided is less than 201 symbols.&#34;)</code></pre>
+</details>
+<div class="desc"><p>Common base class for all non-exit exceptions.</p></div>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="aiochar.exceptions.BaseAiocharException" href="#aiochar.exceptions.BaseAiocharException">BaseAiocharException</a></li>
+<li>builtins.Exception</li>
+<li>builtins.BaseException</li>
+</ul>
+</dd>
+<dt id="aiochar.exceptions.InvalidPollOptions"><code class="flex name class">
+<span>class <span class="ident">InvalidPollOptions</span></span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class InvalidPollOptions(BaseAiocharException):
+    def __init__(self):
+        super().__init__(&#34;Wrong quantity of polls. Please check it is less than 5.&#34;)</code></pre>
+</details>
+<div class="desc"><p>Common base class for all non-exit exceptions.</p></div>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="aiochar.exceptions.BaseAiocharException" href="#aiochar.exceptions.BaseAiocharException">BaseAiocharException</a></li>
+<li>builtins.Exception</li>
+<li>builtins.BaseException</li>
+</ul>
+</dd>
+<dt id="aiochar.exceptions.InvalidPostContent"><code class="flex name class">
+<span>class <span class="ident">InvalidPostContent</span></span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class InvalidPostContent(BaseAiocharException):
+    def __init__(self):
+        super().__init__(&#34;Wrong post content. Check that length of content you provided is less than 1025 symbols.&#34;)</code></pre>
+</details>
+<div class="desc"><p>Common base class for all non-exit exceptions.</p></div>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="aiochar.exceptions.BaseAiocharException" href="#aiochar.exceptions.BaseAiocharException">BaseAiocharException</a></li>
+<li>builtins.Exception</li>
+<li>builtins.BaseException</li>
+</ul>
+</dd>
+<dt id="aiochar.exceptions.InvalidPostFormat"><code class="flex name class">
+<span>class <span class="ident">InvalidPostFormat</span></span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class InvalidPostFormat(BaseAiocharException):
+    def __init__(self):
+        super().__init__(&#34;Wrong post. You must provide at least one of content or poll_options&#34;)</code></pre>
+</details>
+<div class="desc"><p>Common base class for all non-exit exceptions.</p></div>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="aiochar.exceptions.BaseAiocharException" href="#aiochar.exceptions.BaseAiocharException">BaseAiocharException</a></li>
+<li>builtins.Exception</li>
+<li>builtins.BaseException</li>
+</ul>
+</dd>
+<dt id="aiochar.exceptions.InvalidSort"><code class="flex name class">
+<span>class <span class="ident">InvalidSort</span></span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class InvalidSort(BaseAiocharException):
+    def __init__(self):
+        super().__init__(&#34;Invalid sort. Available: &#39;latest&#39; (by default), &#39;popular&#39;, &#39;likes&#39;&#34;)</code></pre>
+</details>
+<div class="desc"><p>Common base class for all non-exit exceptions.</p></div>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="aiochar.exceptions.BaseAiocharException" href="#aiochar.exceptions.BaseAiocharException">BaseAiocharException</a></li>
+<li>builtins.Exception</li>
+<li>builtins.BaseException</li>
+</ul>
+</dd>
+<dt id="aiochar.exceptions.InvalidTimeFrame"><code class="flex name class">
+<span>class <span class="ident">InvalidTimeFrame</span></span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class InvalidTimeFrame(BaseAiocharException):
+    def __init__(self):
+        super().__init__(&#34;Invalid timeframe. Available: &#39;24h&#39;, &#39;1w&#39;, &#39;1m&#39;, &#39;1y&#39;, &#39;all&#39;. Only with &#39;likes&#39; sort.&#34;)</code></pre>
+</details>
+<div class="desc"><p>Common base class for all non-exit exceptions.</p></div>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="aiochar.exceptions.BaseAiocharException" href="#aiochar.exceptions.BaseAiocharException">BaseAiocharException</a></li>
+<li>builtins.Exception</li>
+<li>builtins.BaseException</li>
+</ul>
+</dd>
 <dt id="aiochar.exceptions.NoEnoughData"><code class="flex name class">
 <span>class <span class="ident">NoEnoughData</span></span>
 </code></dt>
@@ -144,7 +312,7 @@ el.replaceWith(d);
 </summary>
 <pre><code class="python">class NoEnoughData(BaseAiocharException):
     def __init__(self):
-        super().__init__(&#34;Not enough data. Check if you provided all needed data.&#34;)</code></pre>
+        super().__init__(&#34;Not enough data. Check that you provided all needed data.&#34;)</code></pre>
 </details>
 <div class="desc"><p>Common base class for all non-exit exceptions.</p></div>
 <h3>Ancestors</h3>
@@ -154,17 +322,17 @@ el.replaceWith(d);
 <li>builtins.BaseException</li>
 </ul>
 </dd>
-<dt id="aiochar.exceptions.NotFoundPost"><code class="flex name class">
-<span>class <span class="ident">NotFoundPost</span></span>
+<dt id="aiochar.exceptions.NotFound"><code class="flex name class">
+<span>class <span class="ident">NotFound</span></span>
 </code></dt>
 <dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class NotFoundPost(BaseAiocharException):
+<pre><code class="python">class NotFound(BaseAiocharException):
     def __init__(self):
-        super().__init__(&#34;Post not found.&#34;)</code></pre>
+        super().__init__(&#34;Not found data.&#34;)</code></pre>
 </details>
 <div class="desc"><p>Common base class for all non-exit exceptions.</p></div>
 <h3>Ancestors</h3>
@@ -199,13 +367,37 @@ el.replaceWith(d);
 <h4><code><a title="aiochar.exceptions.CharBadRequest" href="#aiochar.exceptions.CharBadRequest">CharBadRequest</a></code></h4>
 </li>
 <li>
+<h4><code><a title="aiochar.exceptions.InvalidCategory" href="#aiochar.exceptions.InvalidCategory">InvalidCategory</a></code></h4>
+</li>
+<li>
+<h4><code><a title="aiochar.exceptions.InvalidCountryCode" href="#aiochar.exceptions.InvalidCountryCode">InvalidCountryCode</a></code></h4>
+</li>
+<li>
 <h4><code><a title="aiochar.exceptions.InvalidKey" href="#aiochar.exceptions.InvalidKey">InvalidKey</a></code></h4>
+</li>
+<li>
+<h4><code><a title="aiochar.exceptions.InvalidPollContent" href="#aiochar.exceptions.InvalidPollContent">InvalidPollContent</a></code></h4>
+</li>
+<li>
+<h4><code><a title="aiochar.exceptions.InvalidPollOptions" href="#aiochar.exceptions.InvalidPollOptions">InvalidPollOptions</a></code></h4>
+</li>
+<li>
+<h4><code><a title="aiochar.exceptions.InvalidPostContent" href="#aiochar.exceptions.InvalidPostContent">InvalidPostContent</a></code></h4>
+</li>
+<li>
+<h4><code><a title="aiochar.exceptions.InvalidPostFormat" href="#aiochar.exceptions.InvalidPostFormat">InvalidPostFormat</a></code></h4>
+</li>
+<li>
+<h4><code><a title="aiochar.exceptions.InvalidSort" href="#aiochar.exceptions.InvalidSort">InvalidSort</a></code></h4>
+</li>
+<li>
+<h4><code><a title="aiochar.exceptions.InvalidTimeFrame" href="#aiochar.exceptions.InvalidTimeFrame">InvalidTimeFrame</a></code></h4>
 </li>
 <li>
 <h4><code><a title="aiochar.exceptions.NoEnoughData" href="#aiochar.exceptions.NoEnoughData">NoEnoughData</a></code></h4>
 </li>
 <li>
-<h4><code><a title="aiochar.exceptions.NotFoundPost" href="#aiochar.exceptions.NotFoundPost">NotFoundPost</a></code></h4>
+<h4><code><a title="aiochar.exceptions.NotFound" href="#aiochar.exceptions.NotFound">NotFound</a></code></h4>
 </li>
 </ul>
 </li>

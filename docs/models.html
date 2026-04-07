@@ -46,9 +46,66 @@ el.replaceWith(d);
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
+<dt id="aiochar.models.Hashtag"><code class="flex name class">
+<span>class <span class="ident">Hashtag</span></span>
+<span>(</span><span>tag)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class Hashtag:
+    &#34;&#34;&#34;Main class to contain hashtags.&#34;&#34;&#34;
+
+    def __init__(
+            self,
+            tag):
+        self.tag = tag
+
+    def to_dict(self) -&gt; dict:
+        &#34;&#34;&#34;
+        Convert a hashtag to a dict
+
+        :return: Dict with hashtag data
+        &#34;&#34;&#34;
+        result = self.__dict__.copy()
+        return result
+
+    def __str__(self):
+        return str(self.to_dict())
+
+    def __repr__(self):
+        return str(self.to_dict())</code></pre>
+</details>
+<div class="desc"><p>Main class to contain hashtags.</p></div>
+<h3>Methods</h3>
+<dl>
+<dt id="aiochar.models.Hashtag.to_dict"><code class="name flex">
+<span>def <span class="ident">to_dict</span></span>(<span>self) ‑> dict</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def to_dict(self) -&gt; dict:
+    &#34;&#34;&#34;
+    Convert a hashtag to a dict
+
+    :return: Dict with hashtag data
+    &#34;&#34;&#34;
+    result = self.__dict__.copy()
+    return result</code></pre>
+</details>
+<div class="desc"><p>Convert a hashtag to a dict</p>
+<p>:return: Dict with hashtag data</p></div>
+</dd>
+</dl>
+</dd>
 <dt id="aiochar.models.Post"><code class="flex name class">
 <span>class <span class="ident">Post</span></span>
-<span>(</span><span>post_id: int,<br>user_id: int,<br>username: str,<br>api_bot: bool,<br>flair: list[str],<br>content: str,<br>content_html: str,<br>created_at_iso: str,<br>country_code: str,<br>like_post_id: int,<br>like_count: int,<br>reply_count: int,<br>repost_count: int,<br>is_liked: bool,<br>is_own_post: bool,<br>hashtags: list[str],<br>mentions: list[str],<br>repost_of_id: int | None = None,<br>repost_text: str | None = None)</span>
+<span>(</span><span>id: int,<br>user_id: int,<br>username: str,<br>api_bot: bool,<br>flair: list[str],<br>content: str,<br>content_html: str,<br>created_at_iso: str,<br>country_code: str,<br>like_post_id: int,<br>like_count: int,<br>reply_count: int,<br>repost_count: int,<br>is_liked: bool,<br>is_own_post: bool,<br>hashtags: list[str],<br>mentions: list[str],<br>repost_of_id: int | None = None,<br>repost_text: str | None = None,<br>**kwargs)</span>
 </code></dt>
 <dd>
 <details class="source">
@@ -58,7 +115,7 @@ el.replaceWith(d);
 <pre><code class="python">class Post:
     def __init__(
         self,
-        post_id: int,
+        id: int,
         user_id: int,
         username: str,
         api_bot: bool,
@@ -76,10 +133,13 @@ el.replaceWith(d);
         hashtags: list[str],
         mentions: list[str],
         repost_of_id: int | None = None,
-        repost_text: str | None = None
-    ) -&gt; None:
+        repost_text: str | None = None,
+        **kwargs) -&gt; None:
 
-        self.post_id = int(post_id)
+        for key, value in kwargs.items():
+            setattr(self, key, value)
+
+        self.id = int(id)
         self.user_id = int(user_id)
         self.username = str(username)
 
@@ -92,7 +152,7 @@ el.replaceWith(d);
         try:
             self.created_at_iso = datetime.fromisoformat(created_at_iso.replace(&#34;Z&#34;, &#34;+00:00&#34;))
         except Exception:
-            self.created_at = None
+            self.created_at_iso = None
 
         self.country_code = country_code or &#34;??&#34;
 
@@ -111,35 +171,28 @@ el.replaceWith(d);
         self.repost_of_id = repost_of_id
         self.repost_text = repost_text
 
+    def __new__(cls, **kwargs):
+        if &#34;parent_post_id&#34; in kwargs and kwargs[&#39;parent_post_id&#39;] is not None:
+            instance = Reply.__new__(Reply)
+            instance.__init__(**kwargs)
+            return instance
+        return super().__new__(cls)
+
     def to_dict(self) -&gt; dict:
         &#34;&#34;&#34;
         Convert a post to a dict
 
         :return: Dict with post data
         &#34;&#34;&#34;
-        return {
-            &#34;post_id&#34;: self.post_id,
-            &#34;user_id&#34;: self.user_id,
-            &#34;username&#34;: self.username,
-            &#34;api_bot&#34;: self.api_bot,
-            &#34;flair&#34;: self.flair,
-            &#34;content&#34;: self.content,
-            &#34;content_html&#34;: self.content_html,
-            &#34;created_at_iso&#34;: self.created_at_iso.isoformat() if self.created_at_iso else None,
-            &#34;country_code&#34;: self.country_code,
-            &#34;like_post_id&#34;: self.like_post_id,
-            &#34;like_count&#34;: self.like_count,
-            &#34;reply_count&#34;: self.reply_count,
-            &#34;repost_count&#34;: self.repost_count,
-            &#34;is_liked&#34;: self.is_liked,
-            &#34;is_own_post&#34;: self.is_own_post,
-            &#34;hashtags&#34;: self.hashtags,
-            &#34;mentions&#34;: self.mentions,
-            &#34;repost_of_id&#34;: self.repost_of_id,
-            &#34;repost_text&#34;: self.repost_text
-        }
+        result = self.__dict__.copy()
+        if result.get(&#34;created_at_iso&#34;):
+            result[&#34;created_at_iso&#34;] = result[&#34;created_at_iso&#34;].isoformat()
+        return result
 
     def __str__(self):
+        return str(self.to_dict())
+
+    def __repr__(self):
         return str(self.to_dict())</code></pre>
 </details>
 <div class="desc"></div>
@@ -159,30 +212,236 @@ el.replaceWith(d);
 
     :return: Dict with post data
     &#34;&#34;&#34;
-    return {
-        &#34;post_id&#34;: self.post_id,
-        &#34;user_id&#34;: self.user_id,
-        &#34;username&#34;: self.username,
-        &#34;api_bot&#34;: self.api_bot,
-        &#34;flair&#34;: self.flair,
-        &#34;content&#34;: self.content,
-        &#34;content_html&#34;: self.content_html,
-        &#34;created_at_iso&#34;: self.created_at_iso.isoformat() if self.created_at_iso else None,
-        &#34;country_code&#34;: self.country_code,
-        &#34;like_post_id&#34;: self.like_post_id,
-        &#34;like_count&#34;: self.like_count,
-        &#34;reply_count&#34;: self.reply_count,
-        &#34;repost_count&#34;: self.repost_count,
-        &#34;is_liked&#34;: self.is_liked,
-        &#34;is_own_post&#34;: self.is_own_post,
-        &#34;hashtags&#34;: self.hashtags,
-        &#34;mentions&#34;: self.mentions,
-        &#34;repost_of_id&#34;: self.repost_of_id,
-        &#34;repost_text&#34;: self.repost_text
-    }</code></pre>
+    result = self.__dict__.copy()
+    if result.get(&#34;created_at_iso&#34;):
+        result[&#34;created_at_iso&#34;] = result[&#34;created_at_iso&#34;].isoformat()
+    return result</code></pre>
 </details>
 <div class="desc"><p>Convert a post to a dict</p>
 <p>:return: Dict with post data</p></div>
+</dd>
+</dl>
+</dd>
+<dt id="aiochar.models.Reply"><code class="flex name class">
+<span>class <span class="ident">Reply</span></span>
+<span>(</span><span>id: int,<br>user_id: int,<br>username: str,<br>api_bot: bool,<br>flair: list[str],<br>content: str,<br>content_html: str,<br>created_at_iso: str,<br>country_code: str,<br>like_post_id: int,<br>like_count: int,<br>reply_count: int,<br>repost_count: int,<br>is_liked: bool,<br>is_own_post: bool,<br>hashtags: list[str],<br>mentions: list[str],<br>parent_post_id: int,<br>repost_of_id: int | None = None,<br>repost_text: str | None = None,<br>**kwargs)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class Reply:
+    def __init__(
+            self,
+            id: int,
+            user_id: int,
+            username: str,
+            api_bot: bool,
+            flair: list[str],
+            content: str,
+            content_html: str,
+            created_at_iso: str,
+            country_code: str,
+            like_post_id: int,
+            like_count: int,
+            reply_count: int,
+            repost_count: int,
+            is_liked: bool,
+            is_own_post: bool,
+            hashtags: list[str],
+            mentions: list[str],
+            parent_post_id: int,
+            repost_of_id: int | None = None,
+            repost_text: str | None = None,
+            **kwargs) -&gt; None:
+
+        for key, value in kwargs.items():
+            setattr(self, key, value)
+
+        self.id = int(id)
+        self.user_id = int(user_id)
+        self.username = str(username)
+
+        self.api_bot = bool(api_bot)
+        self.flair = flair or []
+
+        self.content = content or &#34;&#34;
+        self.content_html = content_html or &#34;&#34;
+
+        try:
+            self.created_at_iso = datetime.fromisoformat(created_at_iso.replace(&#34;Z&#34;, &#34;+00:00&#34;))
+        except Exception:
+            self.created_at_iso = None
+
+        self.country_code = country_code or &#34;??&#34;
+
+        self.like_post_id = like_post_id
+
+        self.like_count = int(like_count or 0)
+        self.reply_count = int(reply_count or 0)
+        self.repost_count = int(repost_count or 0)
+
+        self.is_liked = bool(is_liked)
+        self.is_own_post = bool(is_own_post)
+
+        self.hashtags = hashtags or []
+        self.mentions = mentions or []
+
+        self.repost_of_id = repost_of_id
+        self.repost_text = repost_text
+
+        self.parent_post_id = int(parent_post_id)
+
+    def to_dict(self) -&gt; dict:
+        &#34;&#34;&#34;
+        Convert a reply to a dict
+
+        :return: Dict with reply data
+        &#34;&#34;&#34;
+        result = self.__dict__.copy()
+        if result.get(&#34;created_at_iso&#34;):
+            result[&#34;created_at_iso&#34;] = result[&#34;created_at_iso&#34;].isoformat()
+        return result
+
+    def __str__(self):
+        return str(self.to_dict())
+
+    def __repr__(self):
+        return str(self.to_dict())</code></pre>
+</details>
+<div class="desc"></div>
+<h3>Methods</h3>
+<dl>
+<dt id="aiochar.models.Reply.to_dict"><code class="name flex">
+<span>def <span class="ident">to_dict</span></span>(<span>self) ‑> dict</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def to_dict(self) -&gt; dict:
+    &#34;&#34;&#34;
+    Convert a reply to a dict
+
+    :return: Dict with reply data
+    &#34;&#34;&#34;
+    result = self.__dict__.copy()
+    if result.get(&#34;created_at_iso&#34;):
+        result[&#34;created_at_iso&#34;] = result[&#34;created_at_iso&#34;].isoformat()
+    return result</code></pre>
+</details>
+<div class="desc"><p>Convert a reply to a dict</p>
+<p>:return: Dict with reply data</p></div>
+</dd>
+</dl>
+</dd>
+<dt id="aiochar.models.User"><code class="flex name class">
+<span>class <span class="ident">User</span></span>
+<span>(</span><span>id: int,<br>username: str,<br>flair: list[str],<br>created_at_iso: str,<br>api_bot: bool,<br>followed: bool,<br>muted: bool,<br>followers: int,<br>following: int,<br>muting: int,<br>muted_by: int,<br>followed_tags: int,<br>muted_tags: int,<br>posts: int,<br>post_posts: int,<br>post_reposts: int,<br>post_replies: int,<br>likes_received: int,<br>description: str = '',<br>**kwargs)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class User:
+    &#34;&#34;&#34;
+    Main class to contain users
+    &#34;&#34;&#34;
+    def __init__(
+            self,
+            id: int,
+            username: str,
+            flair: list[str],
+            created_at_iso: str,
+            api_bot: bool,
+            followed: bool,
+            muted: bool,
+            followers: int,
+            following: int,
+            muting: int,
+            muted_by: int,
+            followed_tags: int,
+            muted_tags: int,
+            posts: int,
+            post_posts: int,
+            post_reposts: int,
+            post_replies: int,
+            likes_received: int,
+            description: str = &#34;&#34;,
+            **kwargs):
+
+        for key, value in kwargs.items():
+            setattr(self, key, value)
+
+        self.id = id
+        self.username = username
+        self.flair = flair
+
+        try:
+            self.created_at_iso = datetime.fromisoformat(created_at_iso.replace(&#34;Z&#34;, &#34;+00:00&#34;))
+        except Exception:
+            self.created_at_iso = None
+
+        self.api_bot = api_bot
+        self.followed = followed
+        self.muted = muted
+        self.followers = followers
+        self.following = following
+        self.muting = muting
+        self.muted_by = muted_by
+        self.followed_tags = followed_tags
+        self.muted_tags = muted_tags
+        self.posts = posts
+        self.post_posts = post_posts
+        self.post_reposts = post_reposts
+        self.post_replies = post_replies
+        self.likes_received = likes_received
+        self.description = description
+
+    def to_dict(self) -&gt; dict:
+        &#34;&#34;&#34;
+        Convert a user to a dict
+
+        :return: Dict with user data
+        &#34;&#34;&#34;
+        result = self.__dict__.copy()
+        if result.get(&#34;created_at_iso&#34;):
+            result[&#34;created_at_iso&#34;] = result[&#34;created_at_iso&#34;].isoformat()
+        return result
+
+    def __str__(self):
+        return str(self.to_dict())
+
+    def __repr__(self):
+        return str(self.to_dict())</code></pre>
+</details>
+<div class="desc"><p>Main class to contain users</p></div>
+<h3>Methods</h3>
+<dl>
+<dt id="aiochar.models.User.to_dict"><code class="name flex">
+<span>def <span class="ident">to_dict</span></span>(<span>self) ‑> dict</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def to_dict(self) -&gt; dict:
+    &#34;&#34;&#34;
+    Convert a user to a dict
+
+    :return: Dict with user data
+    &#34;&#34;&#34;
+    result = self.__dict__.copy()
+    if result.get(&#34;created_at_iso&#34;):
+        result[&#34;created_at_iso&#34;] = result[&#34;created_at_iso&#34;].isoformat()
+    return result</code></pre>
+</details>
+<div class="desc"><p>Convert a user to a dict</p>
+<p>:return: Dict with user data</p></div>
 </dd>
 </dl>
 </dd>
@@ -202,9 +461,27 @@ el.replaceWith(d);
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
 <li>
+<h4><code><a title="aiochar.models.Hashtag" href="#aiochar.models.Hashtag">Hashtag</a></code></h4>
+<ul class="">
+<li><code><a title="aiochar.models.Hashtag.to_dict" href="#aiochar.models.Hashtag.to_dict">to_dict</a></code></li>
+</ul>
+</li>
+<li>
 <h4><code><a title="aiochar.models.Post" href="#aiochar.models.Post">Post</a></code></h4>
 <ul class="">
 <li><code><a title="aiochar.models.Post.to_dict" href="#aiochar.models.Post.to_dict">to_dict</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="aiochar.models.Reply" href="#aiochar.models.Reply">Reply</a></code></h4>
+<ul class="">
+<li><code><a title="aiochar.models.Reply.to_dict" href="#aiochar.models.Reply.to_dict">to_dict</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="aiochar.models.User" href="#aiochar.models.User">User</a></code></h4>
+<ul class="">
+<li><code><a title="aiochar.models.User.to_dict" href="#aiochar.models.User.to_dict">to_dict</a></code></li>
 </ul>
 </li>
 </ul>

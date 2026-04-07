@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1">
+<meta name="generator" content="pdoc3 0.11.6">
+<title>aiochar.client.utils API documentation</title>
+<meta name="description" content="">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/sanitize.min.css" integrity="sha512-y1dtMcuvtTMJc1yPgEqF0ZjQbhnc/bFhyvIyVNb9Zk5mIGtqVaAB1Ttl28su8AvFMOY0EwRbAe+HCLqj6W7/KA==" crossorigin>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/typography.min.css" integrity="sha512-Y1DYSb995BAfxobCkKepB1BqJJTPrOp3zPL74AWFugHHmmdcvO+C48WLrUOlhGMc0QG7AE3f7gmvvcrmX2fDoA==" crossorigin>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:1.5em;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:2em 0 .50em 0}h3{font-size:1.4em;margin:1.6em 0 .7em 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .2s ease-in-out}a:visited{color:#503}a:hover{color:#b62}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900;font-weight:bold}pre code{font-size:.8em;line-height:1.4em;padding:1em;display:block}code{background:#f3f3f3;font-family:"DejaVu Sans Mono",monospace;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source > summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible;min-width:max-content}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em 1em;margin:1em 0}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul ul{padding-left:1em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js" integrity="sha512-D9gUyxqja7hBtkWpPWGt9wfbfaMGVt9gnyCvYa+jojwwPHLCzUm5i8rpk7vD7wNee9bA35eYIjobYPaQuKS1MQ==" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => {
+hljs.configure({languages: ['bash', 'css', 'diff', 'graphql', 'ini', 'javascript', 'json', 'plaintext', 'python', 'python-repl', 'rust', 'shell', 'sql', 'typescript', 'xml', 'yaml']});
+hljs.highlightAll();
+/* Collapse source docstrings */
+setTimeout(() => {
+[...document.querySelectorAll('.hljs.language-python > .hljs-string')]
+.filter(el => el.innerHTML.length > 200 && ['"""', "'''"].includes(el.innerHTML.substring(0, 3)))
+.forEach(el => {
+let d = document.createElement('details');
+d.classList.add('hljs-string');
+d.innerHTML = '<summary>"""</summary>' + el.innerHTML.substring(3);
+el.replaceWith(d);
+});
+}, 100);
+})</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>aiochar.client.utils</code></h1>
+</header>
+<section id="section-intro">
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="aiochar.client.utils.country_code_validation"><code class="name flex">
+<span>def <span class="ident">country_code_validation</span></span>(<span>country_code)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def country_code_validation(country_code):
+    if country_code not in (&#39;AD&#39;, &#39;AE&#39;, &#39;AF&#39;, &#39;AG&#39;, &#39;AI&#39;, &#39;AL&#39;, &#39;AM&#39;, &#39;AO&#39;, &#39;AQ&#39;, &#39;AR&#39;, &#39;AS&#39;, &#39;AT&#39;, &#39;AU&#39;, &#39;AW&#39;, &#39;AX&#39;, &#39;AZ&#39;, &#39;BA&#39;, &#39;BB&#39;, &#39;BD&#39;, &#39;BE&#39;, &#39;BF&#39;, &#39;BG&#39;, &#39;BH&#39;, &#39;BI&#39;, &#39;BJ&#39;, &#39;BL&#39;, &#39;BM&#39;, &#39;BN&#39;, &#39;BO&#39;, &#39;BQ&#39;, &#39;BR&#39;, &#39;BS&#39;, &#39;BT&#39;, &#39;BV&#39;, &#39;BW&#39;, &#39;BY&#39;, &#39;BZ&#39;, &#39;CA&#39;, &#39;CC&#39;, &#39;CD&#39;, &#39;CF&#39;, &#39;CG&#39;, &#39;CH&#39;, &#39;CI&#39;, &#39;CK&#39;, &#39;CL&#39;, &#39;CM&#39;, &#39;CN&#39;, &#39;CO&#39;, &#39;CR&#39;, &#39;CU&#39;, &#39;CV&#39;, &#39;CW&#39;, &#39;CX&#39;, &#39;CY&#39;, &#39;CZ&#39;, &#39;DE&#39;, &#39;DJ&#39;, &#39;DK&#39;, &#39;DM&#39;, &#39;DO&#39;, &#39;DZ&#39;, &#39;EC&#39;, &#39;EE&#39;, &#39;EG&#39;, &#39;EH&#39;, &#39;ER&#39;, &#39;ES&#39;, &#39;ET&#39;, &#39;FI&#39;, &#39;FJ&#39;, &#39;FK&#39;, &#39;FM&#39;, &#39;FO&#39;, &#39;FR&#39;, &#39;GA&#39;, &#39;GB&#39;, &#39;GD&#39;, &#39;GE&#39;, &#39;GF&#39;, &#39;GG&#39;, &#39;GH&#39;, &#39;GI&#39;, &#39;GL&#39;, &#39;GM&#39;, &#39;GN&#39;, &#39;GP&#39;, &#39;GQ&#39;, &#39;GR&#39;, &#39;GS&#39;, &#39;GT&#39;, &#39;GU&#39;, &#39;GW&#39;, &#39;GY&#39;, &#39;HK&#39;, &#39;HM&#39;, &#39;HN&#39;, &#39;HR&#39;, &#39;HT&#39;, &#39;HU&#39;, &#39;ID&#39;, &#39;IE&#39;, &#39;IL&#39;, &#39;IM&#39;, &#39;IN&#39;, &#39;IO&#39;, &#39;IQ&#39;, &#39;IR&#39;, &#39;IS&#39;, &#39;IT&#39;, &#39;JE&#39;, &#39;JM&#39;, &#39;JO&#39;, &#39;JP&#39;, &#39;KE&#39;, &#39;KG&#39;, &#39;KH&#39;, &#39;KI&#39;, &#39;KM&#39;, &#39;KN&#39;, &#39;KP&#39;, &#39;KR&#39;, &#39;KW&#39;, &#39;KY&#39;, &#39;KZ&#39;, &#39;LA&#39;, &#39;LB&#39;, &#39;LC&#39;, &#39;LI&#39;, &#39;LK&#39;, &#39;LR&#39;, &#39;LS&#39;, &#39;LT&#39;, &#39;LU&#39;, &#39;LV&#39;, &#39;LY&#39;, &#39;MA&#39;, &#39;MC&#39;, &#39;MD&#39;, &#39;ME&#39;, &#39;MF&#39;, &#39;MG&#39;, &#39;MH&#39;, &#39;MK&#39;, &#39;ML&#39;, &#39;MM&#39;, &#39;MN&#39;, &#39;MO&#39;, &#39;MP&#39;, &#39;MQ&#39;, &#39;MR&#39;, &#39;MS&#39;, &#39;MT&#39;, &#39;MU&#39;, &#39;MV&#39;, &#39;MW&#39;, &#39;MX&#39;, &#39;MY&#39;, &#39;MZ&#39;, &#39;NA&#39;, &#39;NC&#39;, &#39;NE&#39;, &#39;NF&#39;, &#39;NG&#39;, &#39;NI&#39;, &#39;NL&#39;, &#39;NO&#39;, &#39;NP&#39;, &#39;NR&#39;, &#39;NU&#39;, &#39;NZ&#39;, &#39;OM&#39;, &#39;PA&#39;, &#39;PE&#39;, &#39;PF&#39;, &#39;PG&#39;, &#39;PH&#39;, &#39;PK&#39;, &#39;PL&#39;, &#39;PM&#39;, &#39;PN&#39;, &#39;PR&#39;, &#39;PS&#39;, &#39;PT&#39;, &#39;PW&#39;, &#39;PY&#39;, &#39;QA&#39;, &#39;RE&#39;, &#39;RO&#39;, &#39;RS&#39;, &#39;RU&#39;, &#39;RW&#39;, &#39;SA&#39;, &#39;SB&#39;, &#39;SC&#39;, &#39;SD&#39;, &#39;SE&#39;, &#39;SG&#39;, &#39;SH&#39;, &#39;SI&#39;, &#39;SJ&#39;, &#39;SK&#39;, &#39;SL&#39;, &#39;SM&#39;, &#39;SN&#39;, &#39;SO&#39;, &#39;SR&#39;, &#39;SS&#39;, &#39;ST&#39;, &#39;SV&#39;, &#39;SX&#39;, &#39;SY&#39;, &#39;SZ&#39;, &#39;TC&#39;, &#39;TD&#39;, &#39;TF&#39;, &#39;TG&#39;, &#39;TH&#39;, &#39;TJ&#39;, &#39;TK&#39;, &#39;TL&#39;, &#39;TM&#39;, &#39;TN&#39;, &#39;TO&#39;, &#39;TR&#39;, &#39;TT&#39;, &#39;TV&#39;, &#39;TW&#39;, &#39;TZ&#39;, &#39;UA&#39;, &#39;UG&#39;, &#39;UM&#39;, &#39;US&#39;, &#39;UY&#39;, &#39;UZ&#39;, &#39;VA&#39;, &#39;VC&#39;, &#39;VE&#39;, &#39;VG&#39;, &#39;VI&#39;, &#39;VN&#39;, &#39;VU&#39;, &#39;WF&#39;, &#39;WS&#39;, &#39;YE&#39;, &#39;YT&#39;, &#39;ZA&#39;, &#39;ZM&#39;, &#39;ZW&#39;):
+        raise InvalidCountryCode</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="aiochar.client.utils.leaderboard_category_validation"><code class="name flex">
+<span>def <span class="ident">leaderboard_category_validation</span></span>(<span>category)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def leaderboard_category_validation(category):
+    if category not in (&#34;posts&#34;,&#34;likes&#34;,&#34;reposts&#34;,&#34;followers&#34;,&#34;mutes&#34;,&#34;followed_tags&#34;,&#34;muted_tags&#34;):
+        raise InvalidCategory</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="aiochar.client.utils.poll_content_validation"><code class="name flex">
+<span>def <span class="ident">poll_content_validation</span></span>(<span>content)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def poll_content_validation(content):
+    if len(content) &gt; 100:
+        raise InvalidPollContent</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="aiochar.client.utils.poll_options_validation"><code class="name flex">
+<span>def <span class="ident">poll_options_validation</span></span>(<span>poll_options)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def poll_options_validation(poll_options):
+    if len(poll_options) &gt; 4:
+        raise InvalidPollOptions
+
+    for poll_option in poll_options:
+        post_content_validation(poll_option)</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="aiochar.client.utils.post_content_validation"><code class="name flex">
+<span>def <span class="ident">post_content_validation</span></span>(<span>content)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def post_content_validation(content):
+    if len(content) &gt; 1024:
+        raise InvalidPostContent</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="aiochar.client.utils.post_format_validation"><code class="name flex">
+<span>def <span class="ident">post_format_validation</span></span>(<span>content, poll_options)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def post_format_validation(content, poll_options):
+    if not content and not poll_options:
+        raise InvalidPostFormat
+
+    post_content_validation(content)
+
+    poll_options_validation(poll_options)</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="aiochar.client.utils.sort_validation"><code class="name flex">
+<span>def <span class="ident">sort_validation</span></span>(<span>sort) ‑> bool</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def sort_validation(sort) -&gt; bool:
+    if sort not in (&#39;latest&#39;, &#39;popular&#39;, &#39;likes&#39;):
+        raise InvalidSort
+    return True</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="aiochar.client.utils.timeframe_validation"><code class="name flex">
+<span>def <span class="ident">timeframe_validation</span></span>(<span>timeframe) ‑> bool</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def timeframe_validation(timeframe) -&gt; bool:
+    if timeframe not in (&#39;24h&#39;, &#39;1w&#39;, &#39;1m&#39;, &#39;1y&#39;, &#39;all&#39;):
+        raise InvalidTimeFrame
+    return True</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+</dl>
+</section>
+<section>
+</section>
+</article>
+<nav id="sidebar">
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="aiochar.client" href="index.html">aiochar.client</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="aiochar.client.utils.country_code_validation" href="#aiochar.client.utils.country_code_validation">country_code_validation</a></code></li>
+<li><code><a title="aiochar.client.utils.leaderboard_category_validation" href="#aiochar.client.utils.leaderboard_category_validation">leaderboard_category_validation</a></code></li>
+<li><code><a title="aiochar.client.utils.poll_content_validation" href="#aiochar.client.utils.poll_content_validation">poll_content_validation</a></code></li>
+<li><code><a title="aiochar.client.utils.poll_options_validation" href="#aiochar.client.utils.poll_options_validation">poll_options_validation</a></code></li>
+<li><code><a title="aiochar.client.utils.post_content_validation" href="#aiochar.client.utils.post_content_validation">post_content_validation</a></code></li>
+<li><code><a title="aiochar.client.utils.post_format_validation" href="#aiochar.client.utils.post_format_validation">post_format_validation</a></code></li>
+<li><code><a title="aiochar.client.utils.sort_validation" href="#aiochar.client.utils.sort_validation">sort_validation</a></code></li>
+<li><code><a title="aiochar.client.utils.timeframe_validation" href="#aiochar.client.utils.timeframe_validation">timeframe_validation</a></code></li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.11.6</a>.</p>
+</footer>
+</body>
+</html>

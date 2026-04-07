@@ -94,7 +94,7 @@ el.replaceWith(d);
 
     async def get_post(
              self,
-             post_id: int) -&gt; Post:
+             post_id: int) -&gt; Post | Reply:
         &#34;&#34;&#34;
         Get Post and its data by post_id
 
@@ -103,38 +103,759 @@ el.replaceWith(d);
         &#34;&#34;&#34;
         raw = await self.session.get(path=f&#34;post/{post_id}&#34;)
 
-        params = (&#34;id&#34;, &#34;user_id&#34;, &#34;username&#34;, &#34;api_bot&#34;, &#34;flair&#34;, &#34;content&#34;, &#34;content_html&#34;, &#34;created_at_iso&#34;, &#34;country_code&#34;, &#34;like_post_id&#34;, &#34;like_count&#34;, &#34;reply_count&#34;, &#34;repost_count&#34;, &#34;is_liked&#34;, &#34;is_own_post&#34;, &#34;hashtags&#34;, &#34;mentions&#34;, &#34;repost_of_id&#34;, &#34;repost_text&#34;)
+        raw = raw[&#34;post&#34;]
 
-        data = {key: raw[&#34;post&#34;][key] for key in params}
-        data[&#34;post_id&#34;] = data.pop(&#34;id&#34;)
-        return Post(**data)
+        return Post(**raw) if not &#34;parent_post_id&#34; in raw else Reply(**raw)
 
+    async def get_user_posts(
+            self,
+            user_id: int,
+            limit: int,
+            ids_only: bool = False) -&gt; tuple[Post] | tuple[int]:
+        &#34;&#34;&#34;
+        Abstract (not the raw API) method to get user posts by limit
+
+        :param user_id: User&#39;s ID. May be here: https://char.social/u/USER_ID
+        :param limit: Limit to get posts. Get last LIMIT posts.
+        :param ids_only: Return only post ids without any other data
+        :return: Tuple of user posts
+        &#34;&#34;&#34;
+        got_posts = 0
+
+        before_id = None
+
+        returned_data = []
+
+        posts = await self.session.get(path=f&#34;user_feed/{user_id}?ids_only={&#39;true&#39; if ids_only else &#39;false&#39;}&#34;)
+        before_id = posts[&#34;next_before_id&#34;]
+        if ids_only:
+            for post_id in posts[&#34;posts&#34;]:
+                if got_posts &gt;= limit:
+                    return tuple(returned_data)
+                returned_data.append(post_id)
+                got_posts += 1
+        else:
+            for post_data in posts[&#34;posts&#34;]:
+                if got_posts &gt;= limit:
+                    return tuple(returned_data)
+                returned_data.append(Post(**post_data))
+                got_posts += 1
+
+        has_more = posts[&#34;has_more&#34;]
+        while got_posts &lt; limit and has_more:
+            posts = await self.session.get(path=f&#34;user_feed/{user_id}?ids_only={&#39;true&#39; if ids_only else &#39;false&#39;}&amp;before_id={before_id}&#34;)
+            before_id = posts[&#34;next_before_id&#34;]
+            has_more = posts[&#34;has_more&#34;]
+            if ids_only:
+                for post_id in posts[&#34;posts&#34;]:
+                    if got_posts &gt;= limit:
+                        return tuple(returned_data)
+                    returned_data.append(post_id)
+                    got_posts += 1
+            else:
+                for post_data in posts[&#34;posts&#34;]:
+                    if got_posts &gt;= limit:
+                        return tuple(returned_data)
+                    returned_data.append(Post(**post_data))
+                    got_posts += 1
+
+        return tuple(returned_data)
+
+    async def get_user_replies(
+            self,
+            user_id: int,
+            limit: int,
+            ids_only: bool = False) -&gt; tuple[Post] | tuple[int]:
+        &#34;&#34;&#34;
+        Abstract (not the raw API) method to get user replies by limit
+
+        :param user_id: User&#39;s ID. May be here: https://char.social/u/USER_ID
+        :param limit: Limit to get posts. Get last LIMIT posts.
+        :param ids_only: Return only post ids without any other data
+        :return: Tuple of user posts
+        &#34;&#34;&#34;
+        got_posts = 0
+
+        before_id = None
+
+        returned_data = []
+
+        posts = await self.session.get(path=f&#34;user_replies_feed/{user_id}?ids_only={&#39;true&#39; if ids_only else &#39;false&#39;}&#34;)
+        before_id = posts[&#34;next_before_id&#34;]
+        if ids_only:
+            for post_id in posts[&#34;posts&#34;]:
+                if got_posts &gt;= limit:
+                    return tuple(returned_data)
+                returned_data.append(post_id)
+                got_posts += 1
+        else:
+            for post_data in posts[&#34;posts&#34;]:
+                if got_posts &gt;= limit:
+                    return tuple(returned_data)
+                returned_data.append(Reply(**post_data))
+                got_posts += 1
+
+        has_more = posts[&#34;has_more&#34;]
+        while got_posts &lt; limit and has_more:
+            posts = await self.session.get(path=f&#34;user_feed/{user_id}?ids_only={&#39;true&#39; if ids_only else &#39;false&#39;}&amp;before_id={before_id}&#34;)
+            before_id = posts[&#34;next_before_id&#34;]
+            has_more = posts[&#34;has_more&#34;]
+            if ids_only:
+                for post_id in posts[&#34;posts&#34;]:
+                    if got_posts &gt;= limit:
+                        return tuple(returned_data)
+                    returned_data.append(post_id)
+                    got_posts += 1
+            else:
+                for post_data in posts[&#34;posts&#34;]:
+                    if got_posts &gt;= limit:
+                        return tuple(returned_data)
+                    returned_data.append(Reply(**post_data))
+                    got_posts += 1
+
+        return tuple(returned_data)
+
+    async def get_hashtag_feed(
+            self,
+            hashtag: str | Hashtag,
+            limit: int = 1,
+            sort: str = &#34;latest&#34;,
+            timeframe: str = &#34;24h&#34;,
+            ids_only: bool = False) -&gt; tuple[Post | Reply, ...] | tuple[int, ...]:
+        &#34;&#34;&#34;
+        Abstract (not the raw API) method to get hashtag feed posts by limit
+
+    Gets posts from a specific hashtag feed with pagination support.
+    Uses cursor-based pagination internally to fetch exactly `limit` posts.
+
+    :param hashtag: Hashtag to fetch posts from
+    :param limit: Maximum number of posts to retrieve. Gets last LIMIT posts.
+    :param sort: Sort order for posts. Options: &#34;latest&#34;, &#34;popular&#34;, &#34;likes&#34;. Default: &#34;latest&#34;
+    :param timeframe: Time window for sorting by likes. Options: &#34;24h&#34;, &#34;1w&#34;, &#34;1m&#34;, &#34;1y&#34;, &#34;all&#34;.
+                      Only applies when sort=&#34;likes&#34;. Default: &#34;24h&#34;
+    :param ids_only: Return only post IDs without any other data. If True, returns tuple of ints.
+                     If False, returns tuple of Post/Reply objects.
+    :return: Tuple of posts (Post/Reply objects if ids_only=False) or tuple of post IDs (ints if ids_only=True)
+        &#34;&#34;&#34;
+
+        # MAKE POST AND REPLIES VALIDATION AND RETURN CORRECT VERSIONS
+
+        if sort:
+            sort_validation(sort)
+        if timeframe:
+            timeframe_validation(timeframe)
+
+        hashtag = hashtag.lstrip(&#34;#&#34;)
+
+        got_posts = 0
+
+        returned_data = []
+
+        posts = await self.session.get(path=f&#34;hashtag_feed/{hashtag}?ids_only={&#39;true&#39; if ids_only else &#39;false&#39;}&amp;sort={sort or &#39;latest&#39;}&amp;timeframe={timeframe or &#39;&#39;}&#34;)
+        cursor = posts[&#34;next_cursor&#34;]
+        if ids_only:
+            for post_id in posts[&#34;posts&#34;]:
+                if got_posts &gt;= limit:
+                    return tuple(returned_data)
+                returned_data.append(post_id)
+                got_posts += 1
+        else:
+            for post_data in posts[&#34;posts&#34;]:
+                if got_posts &gt;= limit:
+                    return tuple(returned_data)
+                returned_data.append(Post(**post_data))
+                got_posts += 1
+
+        has_more = posts[&#34;has_more&#34;]
+        while got_posts &lt; limit and has_more:
+            posts = await self.session.get(
+                path=f&#34;hashtag_feed/{hashtag}?ids_only={&#39;true&#39; if ids_only else &#39;false&#39;}&amp;cursor={cursor}&amp;sort={sort or &#39;latest&#39;}&amp;timeframe={timeframe or &#39;&#39;}&#34;)
+            cursor = posts[&#34;next_cursor&#34;]
+            has_more = posts[&#34;has_more&#34;]
+            if ids_only:
+                for post_id in posts[&#34;posts&#34;]:
+                    if got_posts &gt;= limit:
+                        return tuple(returned_data)
+                    returned_data.append(post_id)
+                    got_posts += 1
+            else:
+                for post_data in posts[&#34;posts&#34;]:
+                    if got_posts &gt;= limit:
+                        return tuple(returned_data)
+                    returned_data.append(Post(**post_data))
+                    got_posts += 1
+
+        return tuple(returned_data)
+
+    async def get_feed(
+            self,
+            limit: int = 1,
+            sort: str = &#34;latest&#34;,
+            timeframe: str = &#34;24h&#34;,
+            ids_only: bool = False) -&gt; tuple[Post | Reply, ...] | tuple[int, ...]:
+        &#34;&#34;&#34;
+        Abstract (not the raw API) method to get hashtag feed posts by limit
+
+    Gets posts from a specific hashtag feed with pagination support.
+    Uses cursor-based pagination internally to fetch exactly `limit` posts.
+
+    :param limit: Maximum number of posts to retrieve. Gets last LIMIT posts.
+    :param sort: Sort order for posts. Options: &#34;latest&#34;, &#34;popular&#34;, &#34;likes&#34;. Default: &#34;latest&#34;
+    :param timeframe: Time window for sorting by likes. Options: &#34;24h&#34;, &#34;1w&#34;, &#34;1m&#34;, &#34;1y&#34;, &#34;all&#34;.
+                      Only applies when sort=&#34;likes&#34;. Default: &#34;24h&#34;
+    :param ids_only: Return only post IDs without any other data. If True, returns tuple of ints.
+                     If False, returns tuple of Post/Reply objects.
+    :return: Tuple of posts (Post/Reply objects if ids_only=False) or tuple of post IDs (ints if ids_only=True)
+        &#34;&#34;&#34;
+
+        # MAKE POST AND REPLIES VALIDATION AND RETURN CORRECT VERSIONS
+
+        if sort:
+            sort_validation(sort)
+        if timeframe:
+            timeframe_validation(timeframe)
+
+        got_posts = 0
+
+        returned_data = []
+
+        posts = await self.session.get(path=f&#34;feed?ids_only={&#39;true&#39; if ids_only else &#39;false&#39;}&amp;sort={sort or &#39;latest&#39;}&amp;timeframe={timeframe or &#39;&#39;}&#34;)
+        cursor = posts[&#34;next_cursor&#34;]
+        if ids_only:
+            for post_id in posts[&#34;posts&#34;]:
+                if got_posts &gt;= limit:
+                    return tuple(returned_data)
+                returned_data.append(post_id)
+                got_posts += 1
+        else:
+            for post_data in posts[&#34;posts&#34;]:
+                if got_posts &gt;= limit:
+                    return tuple(returned_data)
+                returned_data.append(Post(**post_data))
+                got_posts += 1
+
+        has_more = posts[&#34;has_more&#34;]
+        while got_posts &lt; limit and has_more:
+            posts = await self.session.get(
+                path=f&#34;feed?ids_only={&#39;true&#39; if ids_only else &#39;false&#39;}&amp;cursor={cursor}&amp;sort={sort or &#39;latest&#39;}&amp;timeframe={timeframe or &#39;&#39;}&#34;)
+            cursor = posts[&#34;next_cursor&#34;]
+            has_more = posts[&#34;has_more&#34;]
+            if ids_only:
+                for post_id in posts[&#34;posts&#34;]:
+                    if got_posts &gt;= limit:
+                        return tuple(returned_data)
+                    returned_data.append(post_id)
+                    got_posts += 1
+            else:
+                for post_data in posts[&#34;posts&#34;]:
+                    if got_posts &gt;= limit:
+                        return tuple(returned_data)
+                    returned_data.append(Post(**post_data))
+                    got_posts += 1
+
+        return tuple(returned_data)
+
+    async def get_country_feed(
+            self,
+            country_code: str,
+            limit: int = 1,
+            sort: str = &#34;latest&#34;,
+            timeframe: str = &#34;24h&#34;,
+            ids_only: bool = False) -&gt; tuple[Post | Reply, ...] | tuple[int, ...]:
+        &#34;&#34;&#34;
+        Abstract (not the raw API) method to get hashtag feed posts by limit
+
+    Gets posts from a specific hashtag feed with pagination support.
+    Uses cursor-based pagination internally to fetch exactly `limit` posts.
+
+    :param country_code: Country code to fetch posts from (RU/US/FR/etc)
+    :param limit: Maximum number of posts to retrieve. Gets last LIMIT posts.
+    :param sort: Sort order for posts. Options: &#34;latest&#34;, &#34;popular&#34;, &#34;likes&#34;. Default: &#34;latest&#34;
+    :param timeframe: Time window for sorting by likes. Options: &#34;24h&#34;, &#34;1w&#34;, &#34;1m&#34;, &#34;1y&#34;, &#34;all&#34;.
+                      Only applies when sort=&#34;likes&#34;. Default: &#34;24h&#34;
+    :param ids_only: Return only post IDs without any other data. If True, returns tuple of ints.
+                     If False, returns tuple of Post/Reply objects.
+    :return: Tuple of posts (Post/Reply objects if ids_only=False) or tuple of post IDs (ints if ids_only=True)
+        &#34;&#34;&#34;
+
+        # MAKE POST AND REPLIES VALIDATION AND RETURN CORRECT VERSIONS
+
+        if sort:
+            sort_validation(sort)
+        if timeframe:
+            timeframe_validation(timeframe)
+        if country_code:
+            country_code_validation(country_code)
+
+        got_posts = 0
+
+        returned_data = []
+
+        posts = await self.session.get(path=f&#34;country_feed/{country_code}?ids_only={&#39;true&#39; if ids_only else &#39;false&#39;}&amp;sort={sort or &#39;latest&#39;}&amp;timeframe={timeframe or &#39;&#39;}&#34;)
+        cursor = posts[&#34;next_cursor&#34;]
+        if ids_only:
+            for post_id in posts[&#34;posts&#34;]:
+                if got_posts &gt;= limit:
+                    return tuple(returned_data)
+                returned_data.append(post_id)
+                got_posts += 1
+        else:
+            for post_data in posts[&#34;posts&#34;]:
+                if got_posts &gt;= limit:
+                    return tuple(returned_data)
+                returned_data.append(Post(**post_data))
+                got_posts += 1
+
+        has_more = posts[&#34;has_more&#34;]
+        while got_posts &lt; limit and has_more:
+            posts = await self.session.get(
+                path=f&#34;country_feed/{country_code}?ids_only={&#39;true&#39; if ids_only else &#39;false&#39;}&amp;cursor={cursor}&amp;sort={sort or &#39;latest&#39;}&amp;timeframe={timeframe or &#39;&#39;}&#34;)
+            cursor = posts[&#34;next_cursor&#34;]
+            has_more = posts[&#34;has_more&#34;]
+            if ids_only:
+                for post_id in posts[&#34;posts&#34;]:
+                    if got_posts &gt;= limit:
+                        return tuple(returned_data)
+                    returned_data.append(post_id)
+                    got_posts += 1
+            else:
+                for post_data in posts[&#34;posts&#34;]:
+                    if got_posts &gt;= limit:
+                        return tuple(returned_data)
+                    returned_data.append(Post(**post_data))
+                    got_posts += 1
+
+        return tuple(returned_data)
+
+    async def get_user(
+            self,
+            user_id: int) -&gt; User:
+        &#34;&#34;&#34;
+        Get a user by id
+
+        :param user_id: User&#39;s ID. May be here: https://char.social/u/USER_ID
+        :return: User
+        &#34;&#34;&#34;
+        raw = await self.session.get(path=f&#34;user/{user_id}&#34;)
+        raw = raw[&#34;user&#34;]
+
+        counted = {**raw[&#34;counts&#34;]}
+
+        user_data = {**raw}
+        user_data.pop(&#34;counts&#34;)
+
+        user_data.update(**counted)
+
+        return User(**user_data)
+
+    async def get_leaderboard(
+            self,
+            category: str,
+            limit: int = 25,
+            offset: int = 0) -&gt; dict[str, int] | dict[User, int]:
+        &#34;&#34;&#34;
+        Get leaderboard by category
+
+        :param category: Category to get lb. Available: &#39;posts&#39;,&#39;likes&#39;,&#39;reposts&#39;,&#39;followers&#39;,&#39;mutes&#39;,&#39;followed_tags&#39;,&#39;muted_tags&#39;.
+        :param limit: Limit. Limit by values to return. Defaults to 25.
+        :param offset: Number of items to skip for pagination. Defaults to 0.
+        :return: dict like {User: int (how many)} or {str: int}.
+        &#34;&#34;&#34;
+        leaderboard_category_validation(category)
+
+        raw = await self.session.get(path=f&#34;leaderboard?category={category}&amp;offset={offset}&amp;limit={limit}&#34;)
+
+        if category.endswith(&#39;tags&#39;):
+            tags = {}
+            for value in raw[&#34;users&#34;]:
+                tags[Hashtag(value[&#34;id&#34;])] = value[&#34;count&#34;]
+            return tags
+
+        else:
+            users = {}
+            for value in raw[&#34;users&#34;]:
+                user = await self.get_user(user_id=value[&#34;id&#34;])
+                users[user] = value[&#34;count&#34;]
+            return users
+
+    async def get_following(
+            self,
+            limit: int = 1,
+            user_id: int | None = None,
+            user: User | None = None) -&gt; tuple[User, ...]:
+        &#34;&#34;&#34;
+        Get users who user follows.
+
+        :param limit: Maximum number of users to retrieve. Gets last LIMIT users. 1 by default
+        :param user_id: user_id of user you want to get followings
+        :param user: User you want to get followings
+        :return: Tuple of users who provided user follows
+        &#34;&#34;&#34;
+        if not user and not user_id:
+            raise NoEnoughData
+
+        if user:
+            user_id = user.id
+
+        raw = await self.session.get(path=f&#34;user/{user_id}/following?limit={limit}&#34;)
+        users = []
+
+        for user_ in raw[&#34;users&#34;]:
+            users.append(await self.get_user(user_))
+
+        return tuple(users)
+
+    async def get_followers(
+            self,
+            limit: int = 1,
+            user_id: int | None = None,
+            user: User | None = None) -&gt; tuple[User, ...]:
+        &#34;&#34;&#34;
+        Get users who are followed to a user.
+
+        :param limit: Maximum number of users to retrieve. Gets last LIMIT users. 1 by default
+        :param user_id: user_id of user you want to get followers
+        :param user: User you want to get followers
+        :return: Tuple of users who followed to provided user
+        &#34;&#34;&#34;
+        if not user and not user_id:
+            raise NoEnoughData
+
+        if user:
+            user_id = user.id
+
+        raw = await self.session.get(path=f&#34;user/{user_id}/followers?limit={limit}&#34;)
+        users = []
+
+        for user_ in raw[&#34;users&#34;]:
+            users.append(await self.get_user(user_))
+
+        return tuple(users)
+
+    async def get_muting(
+            self,
+            limit: int = 1,
+            user_id: int | None = None,
+            user: User | None = None) -&gt; tuple[User, ...]:
+        &#34;&#34;&#34;
+        Get users who user mutes.
+
+        :param limit: Maximum number of users to retrieve. Gets last LIMIT users. 1 by default
+        :param user_id: user_id of user you want to get mutes
+        :param user: User you want to get mutes
+        :return: Tuple of users who provided user mutes
+        &#34;&#34;&#34;
+        if not user and not user_id:
+            raise NoEnoughData
+
+        if user:
+            user_id = user.id
+
+        raw = await self.session.get(path=f&#34;user/{user_id}/muting?limit={limit}&#34;)
+        users = []
+
+        for user_ in raw[&#34;users&#34;]:
+            users.append(await self.get_user(user_))
+
+        return tuple(users)
+
+    async def get_muted_by(
+            self,
+            limit: int = 1,
+            user_id: int | None = None,
+            user: User | None = None) -&gt; tuple[User, ...]:
+        &#34;&#34;&#34;
+        Get users who muted a user.
+
+        :param limit: Maximum number of users to retrieve. Gets last LIMIT users. 1 by default
+        :param user_id: user_id of user you want to get muters
+        :param user: User you want to get muters
+        :return: Tuple of users who mutes provided user
+        &#34;&#34;&#34;
+        if not user and not user_id:
+            raise NoEnoughData
+
+        if user:
+            user_id = user.id
+
+        raw = await self.session.get(path=f&#34;user/{user_id}/muted_by?limit={limit}&#34;)
+        users = []
+
+        for user_ in raw[&#34;users&#34;]:
+            users.append(await self.get_user(user_))
+
+        return tuple(users)
+
+    async def get_followed_tags(
+            self,
+            limit: int = 1,
+            user_id: int | None = None,
+            user: User | None = None) -&gt; tuple[Hashtag, ...]:
+        &#34;&#34;&#34;
+        Get tags a user follows
+
+        :param limit: Maximum number of tags to retrieve. Gets last LIMIT users. 1 by default
+        :param user_id: user_id of user you want to get followed tags
+        :param user: User you want to get followed tags
+        :return: Tuple with Hashtags
+        &#34;&#34;&#34;
+        if not user and not user_id:
+            raise NoEnoughData
+
+        if user:
+            user_id = user.id
+
+        raw = await self.session.get(path=f&#34;user/{user_id}/followed_tags?limit={limit}&#34;)
+        tags = []
+
+        for tag in raw[&#34;tags&#34;]:
+            tags.append(Hashtag(tag))
+
+        return tuple(tags)
+
+    async def get_muted_tags(
+            self,
+            limit: int = 1,
+            user_id: int | None = None,
+            user: User | None = None) -&gt; tuple[Hashtag, ...]:
+        &#34;&#34;&#34;
+        Get tags a user mutes
+
+        :param limit: Maximum number of tags to retrieve. Gets last LIMIT users. 1 by default
+        :param user_id: user_id of user you want to get muted tags
+        :param user: User you want to get muted tags
+        :return: Tuple with Hashtags
+        &#34;&#34;&#34;
+        if not user and not user_id:
+            raise NoEnoughData
+
+        if user:
+            user_id = user.id
+
+        raw = await self.session.get(path=f&#34;user/{user_id}/muted_tags?limit={limit}&#34;)
+        tags = []
+
+        for tag in raw[&#34;tags&#34;]:
+            tags.append(Hashtag(tag))
+
+        return tuple(tags)
 
     #POST METHODS
 
-    async def like_post(
+    async def create_post(
             self,
-            post: Post | None = None,
-            post_id: int | None = None) -&gt; dict:
+            content: str = &#34;&#34;,
+            poll_options: list[str] | tuple[str, ...] = ()
+    ) -&gt; Post:
         &#34;&#34;&#34;
-        Like a post by id
+        Create a post (not reply or repost)
 
-        :param post: Post you can get by Bot.post() or similar
-        :param post_id: Post_id, int
-        :return: like_count, liked, post_id, success
-        :raise: NotFoundPost when not found post API error, NoEnoughData when no post and no post_id
+        :param content: Text of post. Max: 1024 symbols.
+        :param poll_options: Poll_options. Max: 200 symbols for poll option content and max 4 poll options.
+        :return: Post with created post data
         &#34;&#34;&#34;
+        post_format_validation(content, poll_options)
+
+        data = {&#34;content&#34;: content, &#34;poll_options&#34;: poll_options}
+
+        created_post_data = await self.session.post(path=&#34;post&#34;, json=data)
+        created_post_id = created_post_data[&#34;post_id&#34;]
+
+        created_post = await self.get_post(created_post_id)
+
+        return created_post
+
+    async def create_reply(
+            self,
+            content: str,
+            post: Post | None = None,
+            post_id: int | None = None) -&gt; Reply:
+        &#34;&#34;&#34;
+        Reply to a post by id or Post()
+
+        :param content: Text of reply. Max: 1024 symbols.
+        :param post: Post() can be obtained with get_post or get feeds methods
+        :param post_id: Integer with post ID
+        :return: Reply() with reply data
+        &#34;&#34;&#34;
+        post_content_validation(content)
+
         if not post and not post_id:
             raise NoEnoughData
 
-        data = {
-            &#34;post_id&#34;: post_id
-        }
+        if post:
+            post_id = post.id
 
-        raw = await self.session.post(path=&#34;like_post&#34;, data=data)
+        data = {&#34;content&#34;: content}
+        created_reply = await self.session.post(f&#34;post/{post_id}/reply&#34;, json=data)
+        created_reply_id = created_reply[&#34;post_id&#34;]
+        created_reply = await self.get_post(created_reply_id)
 
-        return raw
+        return created_reply
 
+
+
+
+    async def follow_user(
+            self,
+            user: User | None = None,
+            user_id: int | None = None) -&gt; bool:
+        &#34;&#34;&#34;
+        Follow user by user_id or User()
+
+        :param user: User()
+        :param user_id: user_id
+        :return: True if followed else False
+        &#34;&#34;&#34;
+        if not user and not user_id:
+            raise NoEnoughData
+
+        if user:
+            user_id = user.id
+
+        data = {&#34;user_id&#34;: user_id}
+
+        followed = await self.session.post(&#34;follow_user&#34;, json=data)
+        return followed[&#34;success&#34;]
+
+    async def unfollow_user(
+            self,
+            user: User | None = None,
+            user_id: int | None = None) -&gt; bool:
+        &#34;&#34;&#34;
+        Unfollow user by user_id or User()
+
+        :param user: User()
+        :param user_id: user_id
+        :return: True if followed else False
+        &#34;&#34;&#34;
+        if not user and not user_id:
+            raise NoEnoughData
+
+        if user:
+            user_id = user.id
+
+        data = {&#34;user_id&#34;: user_id}
+
+        followed = await self.session.post(&#34;unfollow_user&#34;, json=data)
+        return followed[&#34;success&#34;]
+
+    async def mute_user(
+            self,
+            user: User | None = None,
+            user_id: int | None = None) -&gt; bool:
+        &#34;&#34;&#34;
+        Mute user by user_id or User()
+
+        :param user: User()
+        :param user_id: user_id
+        :return: True if followed else False
+        &#34;&#34;&#34;
+        if not user and not user_id:
+            raise NoEnoughData
+
+        if user:
+            user_id = user.id
+
+        data = {&#34;user_id&#34;: user_id}
+
+        followed = await self.session.post(&#34;mute_user&#34;, json=data)
+        return followed[&#34;success&#34;]
+
+    async def unmute_user(
+            self,
+            user: User | None = None,
+            user_id: int | None = None) -&gt; bool:
+        &#34;&#34;&#34;
+        Unmute user by user_id or User()
+
+        :param user: User()
+        :param user_id: user_id
+        :return: True if followed else False
+        &#34;&#34;&#34;
+        if not user and not user_id:
+            raise NoEnoughData
+
+        if user:
+            user_id = user.id
+
+        data = {&#34;user_id&#34;: user_id}
+
+        followed = await self.session.post(&#34;unmute_user&#34;, json=data)
+        return followed[&#34;success&#34;]
+
+    async def follow_hashtag(
+            self,
+            hashtag: str | Hashtag) -&gt; bool:
+        if isinstance(hashtag, Hashtag):
+            hashtag = hashtag.tag
+
+        data = {&#34;hashtag&#34;: hashtag}
+
+        raw = await self.session.post(path=&#34;follow_tag&#34;, json=data)
+
+        return raw[&#34;success&#34;]
+
+    async def unfollow_hashtag(
+            self,
+            hashtag: str | Hashtag) -&gt; bool:
+        if isinstance(hashtag, Hashtag):
+            hashtag = hashtag.tag
+
+        data = {&#34;hashtag&#34;: hashtag}
+
+        raw = await self.session.post(path=&#34;unfollow_tag&#34;, json=data)
+
+        return raw[&#34;success&#34;]
+
+    async def mute_hashtag(
+            self,
+            hashtag: str | Hashtag) -&gt; bool:
+        if isinstance(hashtag, Hashtag):
+            hashtag = hashtag.tag
+
+        data = {&#34;hashtag&#34;: hashtag}
+
+        raw = await self.session.post(path=&#34;mute_tag&#34;, json=data)
+
+        return raw[&#34;success&#34;]
+
+    async def unmute_hashtag(
+            self,
+            hashtag: str | Hashtag) -&gt; bool:
+        if isinstance(hashtag, Hashtag):
+            hashtag = hashtag.tag
+
+        data = {&#34;hashtag&#34;: hashtag}
+
+        raw = await self.session.post(path=&#34;unmute_tag&#34;, json=data)
+
+        return raw[&#34;success&#34;]
+
+    # async def like_post(
+    #         self,
+    #         post: Post | None = None,
+    #         post_id: int | None = None) -&gt; dict:
+    #     &#34;&#34;&#34;
+    #     Like a post by id
+    #
+    #     :param post: Post you can get by Bot.post() or similar
+    #     :param post_id: Post_id, int
+    #     :return: like_count, liked, post_id, success
+    #     :raise: NotFoundPost when not found post API error, NoEnoughData when no post and no post_id
+    #     &#34;&#34;&#34;
+    #     if not post and not post_id:
+    #         raise NoEnoughData
+    #
+    #     data = {
+    #         &#34;post_id&#34;: post_id
+    #     }
+    #
+    #     raw = await self.session.post(path=&#34;like_post&#34;, data=data)
+    #
+    #     return raw
+
+    # NOT THE AIOHTTP METHODS
 
     async def close(self) -&gt; None:
         &#34;&#34;&#34;
@@ -194,6 +915,579 @@ def token(self):
 <p>:param self:
 :return:</p></div>
 </dd>
+<dt id="aiochar.client.bot.Bot.create_post"><code class="name flex">
+<span>async def <span class="ident">create_post</span></span>(<span>self, content: str = '', poll_options: list[str] | tuple[str, ...] = ()) ‑> <a title="aiochar.models.Post" href="../models.html#aiochar.models.Post">Post</a></span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def create_post(
+        self,
+        content: str = &#34;&#34;,
+        poll_options: list[str] | tuple[str, ...] = ()
+) -&gt; Post:
+    &#34;&#34;&#34;
+    Create a post (not reply or repost)
+
+    :param content: Text of post. Max: 1024 symbols.
+    :param poll_options: Poll_options. Max: 200 symbols for poll option content and max 4 poll options.
+    :return: Post with created post data
+    &#34;&#34;&#34;
+    post_format_validation(content, poll_options)
+
+    data = {&#34;content&#34;: content, &#34;poll_options&#34;: poll_options}
+
+    created_post_data = await self.session.post(path=&#34;post&#34;, json=data)
+    created_post_id = created_post_data[&#34;post_id&#34;]
+
+    created_post = await self.get_post(created_post_id)
+
+    return created_post</code></pre>
+</details>
+<div class="desc"><p>Create a post (not reply or repost)</p>
+<p>:param content: Text of post. Max: 1024 symbols.
+:param poll_options: Poll_options. Max: 200 symbols for poll option content and max 4 poll options.
+:return: Post with created post data</p></div>
+</dd>
+<dt id="aiochar.client.bot.Bot.create_reply"><code class="name flex">
+<span>async def <span class="ident">create_reply</span></span>(<span>self,<br>content: str,<br>post: <a title="aiochar.models.Post" href="../models.html#aiochar.models.Post">Post</a> | None = None,<br>post_id: int | None = None) ‑> <a title="aiochar.models.Reply" href="../models.html#aiochar.models.Reply">Reply</a></span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def create_reply(
+        self,
+        content: str,
+        post: Post | None = None,
+        post_id: int | None = None) -&gt; Reply:
+    &#34;&#34;&#34;
+    Reply to a post by id or Post()
+
+    :param content: Text of reply. Max: 1024 symbols.
+    :param post: Post() can be obtained with get_post or get feeds methods
+    :param post_id: Integer with post ID
+    :return: Reply() with reply data
+    &#34;&#34;&#34;
+    post_content_validation(content)
+
+    if not post and not post_id:
+        raise NoEnoughData
+
+    if post:
+        post_id = post.id
+
+    data = {&#34;content&#34;: content}
+    created_reply = await self.session.post(f&#34;post/{post_id}/reply&#34;, json=data)
+    created_reply_id = created_reply[&#34;post_id&#34;]
+    created_reply = await self.get_post(created_reply_id)
+
+    return created_reply</code></pre>
+</details>
+<div class="desc"><p>Reply to a post by id or Post()</p>
+<p>:param content: Text of reply. Max: 1024 symbols.
+:param post: Post() can be obtained with get_post or get feeds methods
+:param post_id: Integer with post ID
+:return: Reply() with reply data</p></div>
+</dd>
+<dt id="aiochar.client.bot.Bot.follow_hashtag"><code class="name flex">
+<span>async def <span class="ident">follow_hashtag</span></span>(<span>self,<br>hashtag: str | <a title="aiochar.models.Hashtag" href="../models.html#aiochar.models.Hashtag">Hashtag</a>) ‑> bool</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def follow_hashtag(
+        self,
+        hashtag: str | Hashtag) -&gt; bool:
+    if isinstance(hashtag, Hashtag):
+        hashtag = hashtag.tag
+
+    data = {&#34;hashtag&#34;: hashtag}
+
+    raw = await self.session.post(path=&#34;follow_tag&#34;, json=data)
+
+    return raw[&#34;success&#34;]</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="aiochar.client.bot.Bot.follow_user"><code class="name flex">
+<span>async def <span class="ident">follow_user</span></span>(<span>self,<br>user: <a title="aiochar.models.User" href="../models.html#aiochar.models.User">User</a> | None = None,<br>user_id: int | None = None) ‑> bool</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def follow_user(
+        self,
+        user: User | None = None,
+        user_id: int | None = None) -&gt; bool:
+    &#34;&#34;&#34;
+    Follow user by user_id or User()
+
+    :param user: User()
+    :param user_id: user_id
+    :return: True if followed else False
+    &#34;&#34;&#34;
+    if not user and not user_id:
+        raise NoEnoughData
+
+    if user:
+        user_id = user.id
+
+    data = {&#34;user_id&#34;: user_id}
+
+    followed = await self.session.post(&#34;follow_user&#34;, json=data)
+    return followed[&#34;success&#34;]</code></pre>
+</details>
+<div class="desc"><p>Follow user by user_id or User()</p>
+<p>:param user: User()
+:param user_id: user_id
+:return: True if followed else False</p></div>
+</dd>
+<dt id="aiochar.client.bot.Bot.get_country_feed"><code class="name flex">
+<span>async def <span class="ident">get_country_feed</span></span>(<span>self,<br>country_code: str,<br>limit: int = 1,<br>sort: str = 'latest',<br>timeframe: str = '24h',<br>ids_only: bool = False) ‑> tuple[<a title="aiochar.models.Post" href="../models.html#aiochar.models.Post">Post</a> | <a title="aiochar.models.Reply" href="../models.html#aiochar.models.Reply">Reply</a>, ...] | tuple[int, ...]</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def get_country_feed(
+        self,
+        country_code: str,
+        limit: int = 1,
+        sort: str = &#34;latest&#34;,
+        timeframe: str = &#34;24h&#34;,
+        ids_only: bool = False) -&gt; tuple[Post | Reply, ...] | tuple[int, ...]:
+    &#34;&#34;&#34;
+    Abstract (not the raw API) method to get hashtag feed posts by limit
+
+Gets posts from a specific hashtag feed with pagination support.
+Uses cursor-based pagination internally to fetch exactly `limit` posts.
+
+:param country_code: Country code to fetch posts from (RU/US/FR/etc)
+:param limit: Maximum number of posts to retrieve. Gets last LIMIT posts.
+:param sort: Sort order for posts. Options: &#34;latest&#34;, &#34;popular&#34;, &#34;likes&#34;. Default: &#34;latest&#34;
+:param timeframe: Time window for sorting by likes. Options: &#34;24h&#34;, &#34;1w&#34;, &#34;1m&#34;, &#34;1y&#34;, &#34;all&#34;.
+                  Only applies when sort=&#34;likes&#34;. Default: &#34;24h&#34;
+:param ids_only: Return only post IDs without any other data. If True, returns tuple of ints.
+                 If False, returns tuple of Post/Reply objects.
+:return: Tuple of posts (Post/Reply objects if ids_only=False) or tuple of post IDs (ints if ids_only=True)
+    &#34;&#34;&#34;
+
+    # MAKE POST AND REPLIES VALIDATION AND RETURN CORRECT VERSIONS
+
+    if sort:
+        sort_validation(sort)
+    if timeframe:
+        timeframe_validation(timeframe)
+    if country_code:
+        country_code_validation(country_code)
+
+    got_posts = 0
+
+    returned_data = []
+
+    posts = await self.session.get(path=f&#34;country_feed/{country_code}?ids_only={&#39;true&#39; if ids_only else &#39;false&#39;}&amp;sort={sort or &#39;latest&#39;}&amp;timeframe={timeframe or &#39;&#39;}&#34;)
+    cursor = posts[&#34;next_cursor&#34;]
+    if ids_only:
+        for post_id in posts[&#34;posts&#34;]:
+            if got_posts &gt;= limit:
+                return tuple(returned_data)
+            returned_data.append(post_id)
+            got_posts += 1
+    else:
+        for post_data in posts[&#34;posts&#34;]:
+            if got_posts &gt;= limit:
+                return tuple(returned_data)
+            returned_data.append(Post(**post_data))
+            got_posts += 1
+
+    has_more = posts[&#34;has_more&#34;]
+    while got_posts &lt; limit and has_more:
+        posts = await self.session.get(
+            path=f&#34;country_feed/{country_code}?ids_only={&#39;true&#39; if ids_only else &#39;false&#39;}&amp;cursor={cursor}&amp;sort={sort or &#39;latest&#39;}&amp;timeframe={timeframe or &#39;&#39;}&#34;)
+        cursor = posts[&#34;next_cursor&#34;]
+        has_more = posts[&#34;has_more&#34;]
+        if ids_only:
+            for post_id in posts[&#34;posts&#34;]:
+                if got_posts &gt;= limit:
+                    return tuple(returned_data)
+                returned_data.append(post_id)
+                got_posts += 1
+        else:
+            for post_data in posts[&#34;posts&#34;]:
+                if got_posts &gt;= limit:
+                    return tuple(returned_data)
+                returned_data.append(Post(**post_data))
+                got_posts += 1
+
+    return tuple(returned_data)</code></pre>
+</details>
+<div class="desc"><p>Abstract (not the raw API) method to get hashtag feed posts by limit</p>
+<p>Gets posts from a specific hashtag feed with pagination support.
+Uses cursor-based pagination internally to fetch exactly <code>limit</code> posts.</p>
+<p>:param country_code: Country code to fetch posts from (RU/US/FR/etc)
+:param limit: Maximum number of posts to retrieve. Gets last LIMIT posts.
+:param sort: Sort order for posts. Options: "latest", "popular", "likes". Default: "latest"
+:param timeframe: Time window for sorting by likes. Options: "24h", "1w", "1m", "1y", "all".
+Only applies when sort="likes". Default: "24h"
+:param ids_only: Return only post IDs without any other data. If True, returns tuple of ints.
+If False, returns tuple of Post/Reply objects.
+:return: Tuple of posts (Post/Reply objects if ids_only=False) or tuple of post IDs (ints if ids_only=True)</p></div>
+</dd>
+<dt id="aiochar.client.bot.Bot.get_feed"><code class="name flex">
+<span>async def <span class="ident">get_feed</span></span>(<span>self,<br>limit: int = 1,<br>sort: str = 'latest',<br>timeframe: str = '24h',<br>ids_only: bool = False) ‑> tuple[<a title="aiochar.models.Post" href="../models.html#aiochar.models.Post">Post</a> | <a title="aiochar.models.Reply" href="../models.html#aiochar.models.Reply">Reply</a>, ...] | tuple[int, ...]</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def get_feed(
+        self,
+        limit: int = 1,
+        sort: str = &#34;latest&#34;,
+        timeframe: str = &#34;24h&#34;,
+        ids_only: bool = False) -&gt; tuple[Post | Reply, ...] | tuple[int, ...]:
+    &#34;&#34;&#34;
+    Abstract (not the raw API) method to get hashtag feed posts by limit
+
+Gets posts from a specific hashtag feed with pagination support.
+Uses cursor-based pagination internally to fetch exactly `limit` posts.
+
+:param limit: Maximum number of posts to retrieve. Gets last LIMIT posts.
+:param sort: Sort order for posts. Options: &#34;latest&#34;, &#34;popular&#34;, &#34;likes&#34;. Default: &#34;latest&#34;
+:param timeframe: Time window for sorting by likes. Options: &#34;24h&#34;, &#34;1w&#34;, &#34;1m&#34;, &#34;1y&#34;, &#34;all&#34;.
+                  Only applies when sort=&#34;likes&#34;. Default: &#34;24h&#34;
+:param ids_only: Return only post IDs without any other data. If True, returns tuple of ints.
+                 If False, returns tuple of Post/Reply objects.
+:return: Tuple of posts (Post/Reply objects if ids_only=False) or tuple of post IDs (ints if ids_only=True)
+    &#34;&#34;&#34;
+
+    # MAKE POST AND REPLIES VALIDATION AND RETURN CORRECT VERSIONS
+
+    if sort:
+        sort_validation(sort)
+    if timeframe:
+        timeframe_validation(timeframe)
+
+    got_posts = 0
+
+    returned_data = []
+
+    posts = await self.session.get(path=f&#34;feed?ids_only={&#39;true&#39; if ids_only else &#39;false&#39;}&amp;sort={sort or &#39;latest&#39;}&amp;timeframe={timeframe or &#39;&#39;}&#34;)
+    cursor = posts[&#34;next_cursor&#34;]
+    if ids_only:
+        for post_id in posts[&#34;posts&#34;]:
+            if got_posts &gt;= limit:
+                return tuple(returned_data)
+            returned_data.append(post_id)
+            got_posts += 1
+    else:
+        for post_data in posts[&#34;posts&#34;]:
+            if got_posts &gt;= limit:
+                return tuple(returned_data)
+            returned_data.append(Post(**post_data))
+            got_posts += 1
+
+    has_more = posts[&#34;has_more&#34;]
+    while got_posts &lt; limit and has_more:
+        posts = await self.session.get(
+            path=f&#34;feed?ids_only={&#39;true&#39; if ids_only else &#39;false&#39;}&amp;cursor={cursor}&amp;sort={sort or &#39;latest&#39;}&amp;timeframe={timeframe or &#39;&#39;}&#34;)
+        cursor = posts[&#34;next_cursor&#34;]
+        has_more = posts[&#34;has_more&#34;]
+        if ids_only:
+            for post_id in posts[&#34;posts&#34;]:
+                if got_posts &gt;= limit:
+                    return tuple(returned_data)
+                returned_data.append(post_id)
+                got_posts += 1
+        else:
+            for post_data in posts[&#34;posts&#34;]:
+                if got_posts &gt;= limit:
+                    return tuple(returned_data)
+                returned_data.append(Post(**post_data))
+                got_posts += 1
+
+    return tuple(returned_data)</code></pre>
+</details>
+<div class="desc"><p>Abstract (not the raw API) method to get hashtag feed posts by limit</p>
+<p>Gets posts from a specific hashtag feed with pagination support.
+Uses cursor-based pagination internally to fetch exactly <code>limit</code> posts.</p>
+<p>:param limit: Maximum number of posts to retrieve. Gets last LIMIT posts.
+:param sort: Sort order for posts. Options: "latest", "popular", "likes". Default: "latest"
+:param timeframe: Time window for sorting by likes. Options: "24h", "1w", "1m", "1y", "all".
+Only applies when sort="likes". Default: "24h"
+:param ids_only: Return only post IDs without any other data. If True, returns tuple of ints.
+If False, returns tuple of Post/Reply objects.
+:return: Tuple of posts (Post/Reply objects if ids_only=False) or tuple of post IDs (ints if ids_only=True)</p></div>
+</dd>
+<dt id="aiochar.client.bot.Bot.get_followed_tags"><code class="name flex">
+<span>async def <span class="ident">get_followed_tags</span></span>(<span>self,<br>limit: int = 1,<br>user_id: int | None = None,<br>user: <a title="aiochar.models.User" href="../models.html#aiochar.models.User">User</a> | None = None) ‑> tuple[<a title="aiochar.models.Hashtag" href="../models.html#aiochar.models.Hashtag">Hashtag</a>, ...]</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def get_followed_tags(
+        self,
+        limit: int = 1,
+        user_id: int | None = None,
+        user: User | None = None) -&gt; tuple[Hashtag, ...]:
+    &#34;&#34;&#34;
+    Get tags a user follows
+
+    :param limit: Maximum number of tags to retrieve. Gets last LIMIT users. 1 by default
+    :param user_id: user_id of user you want to get followed tags
+    :param user: User you want to get followed tags
+    :return: Tuple with Hashtags
+    &#34;&#34;&#34;
+    if not user and not user_id:
+        raise NoEnoughData
+
+    if user:
+        user_id = user.id
+
+    raw = await self.session.get(path=f&#34;user/{user_id}/followed_tags?limit={limit}&#34;)
+    tags = []
+
+    for tag in raw[&#34;tags&#34;]:
+        tags.append(Hashtag(tag))
+
+    return tuple(tags)</code></pre>
+</details>
+<div class="desc"><p>Get tags a user follows</p>
+<p>:param limit: Maximum number of tags to retrieve. Gets last LIMIT users. 1 by default
+:param user_id: user_id of user you want to get followed tags
+:param user: User you want to get followed tags
+:return: Tuple with Hashtags</p></div>
+</dd>
+<dt id="aiochar.client.bot.Bot.get_followers"><code class="name flex">
+<span>async def <span class="ident">get_followers</span></span>(<span>self,<br>limit: int = 1,<br>user_id: int | None = None,<br>user: <a title="aiochar.models.User" href="../models.html#aiochar.models.User">User</a> | None = None) ‑> tuple[<a title="aiochar.models.User" href="../models.html#aiochar.models.User">User</a>, ...]</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def get_followers(
+        self,
+        limit: int = 1,
+        user_id: int | None = None,
+        user: User | None = None) -&gt; tuple[User, ...]:
+    &#34;&#34;&#34;
+    Get users who are followed to a user.
+
+    :param limit: Maximum number of users to retrieve. Gets last LIMIT users. 1 by default
+    :param user_id: user_id of user you want to get followers
+    :param user: User you want to get followers
+    :return: Tuple of users who followed to provided user
+    &#34;&#34;&#34;
+    if not user and not user_id:
+        raise NoEnoughData
+
+    if user:
+        user_id = user.id
+
+    raw = await self.session.get(path=f&#34;user/{user_id}/followers?limit={limit}&#34;)
+    users = []
+
+    for user_ in raw[&#34;users&#34;]:
+        users.append(await self.get_user(user_))
+
+    return tuple(users)</code></pre>
+</details>
+<div class="desc"><p>Get users who are followed to a user.</p>
+<p>:param limit: Maximum number of users to retrieve. Gets last LIMIT users. 1 by default
+:param user_id: user_id of user you want to get followers
+:param user: User you want to get followers
+:return: Tuple of users who followed to provided user</p></div>
+</dd>
+<dt id="aiochar.client.bot.Bot.get_following"><code class="name flex">
+<span>async def <span class="ident">get_following</span></span>(<span>self,<br>limit: int = 1,<br>user_id: int | None = None,<br>user: <a title="aiochar.models.User" href="../models.html#aiochar.models.User">User</a> | None = None) ‑> tuple[<a title="aiochar.models.User" href="../models.html#aiochar.models.User">User</a>, ...]</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def get_following(
+        self,
+        limit: int = 1,
+        user_id: int | None = None,
+        user: User | None = None) -&gt; tuple[User, ...]:
+    &#34;&#34;&#34;
+    Get users who user follows.
+
+    :param limit: Maximum number of users to retrieve. Gets last LIMIT users. 1 by default
+    :param user_id: user_id of user you want to get followings
+    :param user: User you want to get followings
+    :return: Tuple of users who provided user follows
+    &#34;&#34;&#34;
+    if not user and not user_id:
+        raise NoEnoughData
+
+    if user:
+        user_id = user.id
+
+    raw = await self.session.get(path=f&#34;user/{user_id}/following?limit={limit}&#34;)
+    users = []
+
+    for user_ in raw[&#34;users&#34;]:
+        users.append(await self.get_user(user_))
+
+    return tuple(users)</code></pre>
+</details>
+<div class="desc"><p>Get users who user follows.</p>
+<p>:param limit: Maximum number of users to retrieve. Gets last LIMIT users. 1 by default
+:param user_id: user_id of user you want to get followings
+:param user: User you want to get followings
+:return: Tuple of users who provided user follows</p></div>
+</dd>
+<dt id="aiochar.client.bot.Bot.get_hashtag_feed"><code class="name flex">
+<span>async def <span class="ident">get_hashtag_feed</span></span>(<span>self,<br>hashtag: str | <a title="aiochar.models.Hashtag" href="../models.html#aiochar.models.Hashtag">Hashtag</a>,<br>limit: int = 1,<br>sort: str = 'latest',<br>timeframe: str = '24h',<br>ids_only: bool = False) ‑> tuple[<a title="aiochar.models.Post" href="../models.html#aiochar.models.Post">Post</a> | <a title="aiochar.models.Reply" href="../models.html#aiochar.models.Reply">Reply</a>, ...] | tuple[int, ...]</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def get_hashtag_feed(
+        self,
+        hashtag: str | Hashtag,
+        limit: int = 1,
+        sort: str = &#34;latest&#34;,
+        timeframe: str = &#34;24h&#34;,
+        ids_only: bool = False) -&gt; tuple[Post | Reply, ...] | tuple[int, ...]:
+    &#34;&#34;&#34;
+    Abstract (not the raw API) method to get hashtag feed posts by limit
+
+Gets posts from a specific hashtag feed with pagination support.
+Uses cursor-based pagination internally to fetch exactly `limit` posts.
+
+:param hashtag: Hashtag to fetch posts from
+:param limit: Maximum number of posts to retrieve. Gets last LIMIT posts.
+:param sort: Sort order for posts. Options: &#34;latest&#34;, &#34;popular&#34;, &#34;likes&#34;. Default: &#34;latest&#34;
+:param timeframe: Time window for sorting by likes. Options: &#34;24h&#34;, &#34;1w&#34;, &#34;1m&#34;, &#34;1y&#34;, &#34;all&#34;.
+                  Only applies when sort=&#34;likes&#34;. Default: &#34;24h&#34;
+:param ids_only: Return only post IDs without any other data. If True, returns tuple of ints.
+                 If False, returns tuple of Post/Reply objects.
+:return: Tuple of posts (Post/Reply objects if ids_only=False) or tuple of post IDs (ints if ids_only=True)
+    &#34;&#34;&#34;
+
+    # MAKE POST AND REPLIES VALIDATION AND RETURN CORRECT VERSIONS
+
+    if sort:
+        sort_validation(sort)
+    if timeframe:
+        timeframe_validation(timeframe)
+
+    hashtag = hashtag.lstrip(&#34;#&#34;)
+
+    got_posts = 0
+
+    returned_data = []
+
+    posts = await self.session.get(path=f&#34;hashtag_feed/{hashtag}?ids_only={&#39;true&#39; if ids_only else &#39;false&#39;}&amp;sort={sort or &#39;latest&#39;}&amp;timeframe={timeframe or &#39;&#39;}&#34;)
+    cursor = posts[&#34;next_cursor&#34;]
+    if ids_only:
+        for post_id in posts[&#34;posts&#34;]:
+            if got_posts &gt;= limit:
+                return tuple(returned_data)
+            returned_data.append(post_id)
+            got_posts += 1
+    else:
+        for post_data in posts[&#34;posts&#34;]:
+            if got_posts &gt;= limit:
+                return tuple(returned_data)
+            returned_data.append(Post(**post_data))
+            got_posts += 1
+
+    has_more = posts[&#34;has_more&#34;]
+    while got_posts &lt; limit and has_more:
+        posts = await self.session.get(
+            path=f&#34;hashtag_feed/{hashtag}?ids_only={&#39;true&#39; if ids_only else &#39;false&#39;}&amp;cursor={cursor}&amp;sort={sort or &#39;latest&#39;}&amp;timeframe={timeframe or &#39;&#39;}&#34;)
+        cursor = posts[&#34;next_cursor&#34;]
+        has_more = posts[&#34;has_more&#34;]
+        if ids_only:
+            for post_id in posts[&#34;posts&#34;]:
+                if got_posts &gt;= limit:
+                    return tuple(returned_data)
+                returned_data.append(post_id)
+                got_posts += 1
+        else:
+            for post_data in posts[&#34;posts&#34;]:
+                if got_posts &gt;= limit:
+                    return tuple(returned_data)
+                returned_data.append(Post(**post_data))
+                got_posts += 1
+
+    return tuple(returned_data)</code></pre>
+</details>
+<div class="desc"><p>Abstract (not the raw API) method to get hashtag feed posts by limit</p>
+<p>Gets posts from a specific hashtag feed with pagination support.
+Uses cursor-based pagination internally to fetch exactly <code>limit</code> posts.</p>
+<p>:param hashtag: Hashtag to fetch posts from
+:param limit: Maximum number of posts to retrieve. Gets last LIMIT posts.
+:param sort: Sort order for posts. Options: "latest", "popular", "likes". Default: "latest"
+:param timeframe: Time window for sorting by likes. Options: "24h", "1w", "1m", "1y", "all".
+Only applies when sort="likes". Default: "24h"
+:param ids_only: Return only post IDs without any other data. If True, returns tuple of ints.
+If False, returns tuple of Post/Reply objects.
+:return: Tuple of posts (Post/Reply objects if ids_only=False) or tuple of post IDs (ints if ids_only=True)</p></div>
+</dd>
+<dt id="aiochar.client.bot.Bot.get_leaderboard"><code class="name flex">
+<span>async def <span class="ident">get_leaderboard</span></span>(<span>self, category: str, limit: int = 25, offset: int = 0) ‑> dict[str, int] | dict[<a title="aiochar.models.User" href="../models.html#aiochar.models.User">User</a>, int]</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def get_leaderboard(
+        self,
+        category: str,
+        limit: int = 25,
+        offset: int = 0) -&gt; dict[str, int] | dict[User, int]:
+    &#34;&#34;&#34;
+    Get leaderboard by category
+
+    :param category: Category to get lb. Available: &#39;posts&#39;,&#39;likes&#39;,&#39;reposts&#39;,&#39;followers&#39;,&#39;mutes&#39;,&#39;followed_tags&#39;,&#39;muted_tags&#39;.
+    :param limit: Limit. Limit by values to return. Defaults to 25.
+    :param offset: Number of items to skip for pagination. Defaults to 0.
+    :return: dict like {User: int (how many)} or {str: int}.
+    &#34;&#34;&#34;
+    leaderboard_category_validation(category)
+
+    raw = await self.session.get(path=f&#34;leaderboard?category={category}&amp;offset={offset}&amp;limit={limit}&#34;)
+
+    if category.endswith(&#39;tags&#39;):
+        tags = {}
+        for value in raw[&#34;users&#34;]:
+            tags[Hashtag(value[&#34;id&#34;])] = value[&#34;count&#34;]
+        return tags
+
+    else:
+        users = {}
+        for value in raw[&#34;users&#34;]:
+            user = await self.get_user(user_id=value[&#34;id&#34;])
+            users[user] = value[&#34;count&#34;]
+        return users</code></pre>
+</details>
+<div class="desc"><p>Get leaderboard by category</p>
+<p>:param category: Category to get lb. Available: 'posts','likes','reposts','followers','mutes','followed_tags','muted_tags'.
+:param limit: Limit. Limit by values to return. Defaults to 25.
+:param offset: Number of items to skip for pagination. Defaults to 0.
+:return: dict like {User: int (how many)} or {str: int}.</p></div>
+</dd>
 <dt id="aiochar.client.bot.Bot.get_me"><code class="name flex">
 <span>async def <span class="ident">get_me</span></span>(<span>self) ‑> int</span>
 </code></dt>
@@ -217,8 +1511,131 @@ def token(self):
 <p>:return: Profile's ID
 :raise: InvalidKey when invalid_api_key API error</p></div>
 </dd>
+<dt id="aiochar.client.bot.Bot.get_muted_by"><code class="name flex">
+<span>async def <span class="ident">get_muted_by</span></span>(<span>self,<br>limit: int = 1,<br>user_id: int | None = None,<br>user: <a title="aiochar.models.User" href="../models.html#aiochar.models.User">User</a> | None = None) ‑> tuple[<a title="aiochar.models.User" href="../models.html#aiochar.models.User">User</a>, ...]</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def get_muted_by(
+        self,
+        limit: int = 1,
+        user_id: int | None = None,
+        user: User | None = None) -&gt; tuple[User, ...]:
+    &#34;&#34;&#34;
+    Get users who muted a user.
+
+    :param limit: Maximum number of users to retrieve. Gets last LIMIT users. 1 by default
+    :param user_id: user_id of user you want to get muters
+    :param user: User you want to get muters
+    :return: Tuple of users who mutes provided user
+    &#34;&#34;&#34;
+    if not user and not user_id:
+        raise NoEnoughData
+
+    if user:
+        user_id = user.id
+
+    raw = await self.session.get(path=f&#34;user/{user_id}/muted_by?limit={limit}&#34;)
+    users = []
+
+    for user_ in raw[&#34;users&#34;]:
+        users.append(await self.get_user(user_))
+
+    return tuple(users)</code></pre>
+</details>
+<div class="desc"><p>Get users who muted a user.</p>
+<p>:param limit: Maximum number of users to retrieve. Gets last LIMIT users. 1 by default
+:param user_id: user_id of user you want to get muters
+:param user: User you want to get muters
+:return: Tuple of users who mutes provided user</p></div>
+</dd>
+<dt id="aiochar.client.bot.Bot.get_muted_tags"><code class="name flex">
+<span>async def <span class="ident">get_muted_tags</span></span>(<span>self,<br>limit: int = 1,<br>user_id: int | None = None,<br>user: <a title="aiochar.models.User" href="../models.html#aiochar.models.User">User</a> | None = None) ‑> tuple[<a title="aiochar.models.Hashtag" href="../models.html#aiochar.models.Hashtag">Hashtag</a>, ...]</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def get_muted_tags(
+        self,
+        limit: int = 1,
+        user_id: int | None = None,
+        user: User | None = None) -&gt; tuple[Hashtag, ...]:
+    &#34;&#34;&#34;
+    Get tags a user mutes
+
+    :param limit: Maximum number of tags to retrieve. Gets last LIMIT users. 1 by default
+    :param user_id: user_id of user you want to get muted tags
+    :param user: User you want to get muted tags
+    :return: Tuple with Hashtags
+    &#34;&#34;&#34;
+    if not user and not user_id:
+        raise NoEnoughData
+
+    if user:
+        user_id = user.id
+
+    raw = await self.session.get(path=f&#34;user/{user_id}/muted_tags?limit={limit}&#34;)
+    tags = []
+
+    for tag in raw[&#34;tags&#34;]:
+        tags.append(Hashtag(tag))
+
+    return tuple(tags)</code></pre>
+</details>
+<div class="desc"><p>Get tags a user mutes</p>
+<p>:param limit: Maximum number of tags to retrieve. Gets last LIMIT users. 1 by default
+:param user_id: user_id of user you want to get muted tags
+:param user: User you want to get muted tags
+:return: Tuple with Hashtags</p></div>
+</dd>
+<dt id="aiochar.client.bot.Bot.get_muting"><code class="name flex">
+<span>async def <span class="ident">get_muting</span></span>(<span>self,<br>limit: int = 1,<br>user_id: int | None = None,<br>user: <a title="aiochar.models.User" href="../models.html#aiochar.models.User">User</a> | None = None) ‑> tuple[<a title="aiochar.models.User" href="../models.html#aiochar.models.User">User</a>, ...]</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def get_muting(
+        self,
+        limit: int = 1,
+        user_id: int | None = None,
+        user: User | None = None) -&gt; tuple[User, ...]:
+    &#34;&#34;&#34;
+    Get users who user mutes.
+
+    :param limit: Maximum number of users to retrieve. Gets last LIMIT users. 1 by default
+    :param user_id: user_id of user you want to get mutes
+    :param user: User you want to get mutes
+    :return: Tuple of users who provided user mutes
+    &#34;&#34;&#34;
+    if not user and not user_id:
+        raise NoEnoughData
+
+    if user:
+        user_id = user.id
+
+    raw = await self.session.get(path=f&#34;user/{user_id}/muting?limit={limit}&#34;)
+    users = []
+
+    for user_ in raw[&#34;users&#34;]:
+        users.append(await self.get_user(user_))
+
+    return tuple(users)</code></pre>
+</details>
+<div class="desc"><p>Get users who user mutes.</p>
+<p>:param limit: Maximum number of users to retrieve. Gets last LIMIT users. 1 by default
+:param user_id: user_id of user you want to get mutes
+:param user: User you want to get mutes
+:return: Tuple of users who provided user mutes</p></div>
+</dd>
 <dt id="aiochar.client.bot.Bot.get_post"><code class="name flex">
-<span>async def <span class="ident">get_post</span></span>(<span>self, post_id: int) ‑> <a title="aiochar.models.Post" href="../models.html#aiochar.models.Post">Post</a></span>
+<span>async def <span class="ident">get_post</span></span>(<span>self, post_id: int) ‑> <a title="aiochar.models.Post" href="../models.html#aiochar.models.Post">Post</a> | <a title="aiochar.models.Reply" href="../models.html#aiochar.models.Reply">Reply</a></span>
 </code></dt>
 <dd>
 <details class="source">
@@ -227,7 +1644,7 @@ def token(self):
 </summary>
 <pre><code class="python">async def get_post(
          self,
-         post_id: int) -&gt; Post:
+         post_id: int) -&gt; Post | Reply:
     &#34;&#34;&#34;
     Get Post and its data by post_id
 
@@ -236,52 +1653,353 @@ def token(self):
     &#34;&#34;&#34;
     raw = await self.session.get(path=f&#34;post/{post_id}&#34;)
 
-    params = (&#34;id&#34;, &#34;user_id&#34;, &#34;username&#34;, &#34;api_bot&#34;, &#34;flair&#34;, &#34;content&#34;, &#34;content_html&#34;, &#34;created_at_iso&#34;, &#34;country_code&#34;, &#34;like_post_id&#34;, &#34;like_count&#34;, &#34;reply_count&#34;, &#34;repost_count&#34;, &#34;is_liked&#34;, &#34;is_own_post&#34;, &#34;hashtags&#34;, &#34;mentions&#34;, &#34;repost_of_id&#34;, &#34;repost_text&#34;)
+    raw = raw[&#34;post&#34;]
 
-    data = {key: raw[&#34;post&#34;][key] for key in params}
-    data[&#34;post_id&#34;] = data.pop(&#34;id&#34;)
-    return Post(**data)</code></pre>
+    return Post(**raw) if not &#34;parent_post_id&#34; in raw else Reply(**raw)</code></pre>
 </details>
 <div class="desc"><p>Get Post and its data by post_id</p>
 <p>:param post_id: Post's for getting ID
 :return: Post with returned data</p></div>
 </dd>
-<dt id="aiochar.client.bot.Bot.like_post"><code class="name flex">
-<span>async def <span class="ident">like_post</span></span>(<span>self,<br>post: <a title="aiochar.models.Post" href="../models.html#aiochar.models.Post">Post</a> | None = None,<br>post_id: int | None = None) ‑> dict</span>
+<dt id="aiochar.client.bot.Bot.get_user"><code class="name flex">
+<span>async def <span class="ident">get_user</span></span>(<span>self, user_id: int) ‑> <a title="aiochar.models.User" href="../models.html#aiochar.models.User">User</a></span>
 </code></dt>
 <dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">async def like_post(
+<pre><code class="python">async def get_user(
         self,
-        post: Post | None = None,
-        post_id: int | None = None) -&gt; dict:
+        user_id: int) -&gt; User:
     &#34;&#34;&#34;
-    Like a post by id
+    Get a user by id
 
-    :param post: Post you can get by Bot.post() or similar
-    :param post_id: Post_id, int
-    :return: like_count, liked, post_id, success
-    :raise: NotFoundPost when not found post API error, NoEnoughData when no post and no post_id
+    :param user_id: User&#39;s ID. May be here: https://char.social/u/USER_ID
+    :return: User
     &#34;&#34;&#34;
-    if not post and not post_id:
+    raw = await self.session.get(path=f&#34;user/{user_id}&#34;)
+    raw = raw[&#34;user&#34;]
+
+    counted = {**raw[&#34;counts&#34;]}
+
+    user_data = {**raw}
+    user_data.pop(&#34;counts&#34;)
+
+    user_data.update(**counted)
+
+    return User(**user_data)</code></pre>
+</details>
+<div class="desc"><p>Get a user by id</p>
+<p>:param user_id: User's ID. May be here: <a href="https://char.social/u/USER_ID">https://char.social/u/USER_ID</a>
+:return: User</p></div>
+</dd>
+<dt id="aiochar.client.bot.Bot.get_user_posts"><code class="name flex">
+<span>async def <span class="ident">get_user_posts</span></span>(<span>self, user_id: int, limit: int, ids_only: bool = False) ‑> tuple[<a title="aiochar.models.Post" href="../models.html#aiochar.models.Post">Post</a>] | tuple[int]</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def get_user_posts(
+        self,
+        user_id: int,
+        limit: int,
+        ids_only: bool = False) -&gt; tuple[Post] | tuple[int]:
+    &#34;&#34;&#34;
+    Abstract (not the raw API) method to get user posts by limit
+
+    :param user_id: User&#39;s ID. May be here: https://char.social/u/USER_ID
+    :param limit: Limit to get posts. Get last LIMIT posts.
+    :param ids_only: Return only post ids without any other data
+    :return: Tuple of user posts
+    &#34;&#34;&#34;
+    got_posts = 0
+
+    before_id = None
+
+    returned_data = []
+
+    posts = await self.session.get(path=f&#34;user_feed/{user_id}?ids_only={&#39;true&#39; if ids_only else &#39;false&#39;}&#34;)
+    before_id = posts[&#34;next_before_id&#34;]
+    if ids_only:
+        for post_id in posts[&#34;posts&#34;]:
+            if got_posts &gt;= limit:
+                return tuple(returned_data)
+            returned_data.append(post_id)
+            got_posts += 1
+    else:
+        for post_data in posts[&#34;posts&#34;]:
+            if got_posts &gt;= limit:
+                return tuple(returned_data)
+            returned_data.append(Post(**post_data))
+            got_posts += 1
+
+    has_more = posts[&#34;has_more&#34;]
+    while got_posts &lt; limit and has_more:
+        posts = await self.session.get(path=f&#34;user_feed/{user_id}?ids_only={&#39;true&#39; if ids_only else &#39;false&#39;}&amp;before_id={before_id}&#34;)
+        before_id = posts[&#34;next_before_id&#34;]
+        has_more = posts[&#34;has_more&#34;]
+        if ids_only:
+            for post_id in posts[&#34;posts&#34;]:
+                if got_posts &gt;= limit:
+                    return tuple(returned_data)
+                returned_data.append(post_id)
+                got_posts += 1
+        else:
+            for post_data in posts[&#34;posts&#34;]:
+                if got_posts &gt;= limit:
+                    return tuple(returned_data)
+                returned_data.append(Post(**post_data))
+                got_posts += 1
+
+    return tuple(returned_data)</code></pre>
+</details>
+<div class="desc"><p>Abstract (not the raw API) method to get user posts by limit</p>
+<p>:param user_id: User's ID. May be here: <a href="https://char.social/u/USER_ID">https://char.social/u/USER_ID</a>
+:param limit: Limit to get posts. Get last LIMIT posts.
+:param ids_only: Return only post ids without any other data
+:return: Tuple of user posts</p></div>
+</dd>
+<dt id="aiochar.client.bot.Bot.get_user_replies"><code class="name flex">
+<span>async def <span class="ident">get_user_replies</span></span>(<span>self, user_id: int, limit: int, ids_only: bool = False) ‑> tuple[<a title="aiochar.models.Post" href="../models.html#aiochar.models.Post">Post</a>] | tuple[int]</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def get_user_replies(
+        self,
+        user_id: int,
+        limit: int,
+        ids_only: bool = False) -&gt; tuple[Post] | tuple[int]:
+    &#34;&#34;&#34;
+    Abstract (not the raw API) method to get user replies by limit
+
+    :param user_id: User&#39;s ID. May be here: https://char.social/u/USER_ID
+    :param limit: Limit to get posts. Get last LIMIT posts.
+    :param ids_only: Return only post ids without any other data
+    :return: Tuple of user posts
+    &#34;&#34;&#34;
+    got_posts = 0
+
+    before_id = None
+
+    returned_data = []
+
+    posts = await self.session.get(path=f&#34;user_replies_feed/{user_id}?ids_only={&#39;true&#39; if ids_only else &#39;false&#39;}&#34;)
+    before_id = posts[&#34;next_before_id&#34;]
+    if ids_only:
+        for post_id in posts[&#34;posts&#34;]:
+            if got_posts &gt;= limit:
+                return tuple(returned_data)
+            returned_data.append(post_id)
+            got_posts += 1
+    else:
+        for post_data in posts[&#34;posts&#34;]:
+            if got_posts &gt;= limit:
+                return tuple(returned_data)
+            returned_data.append(Reply(**post_data))
+            got_posts += 1
+
+    has_more = posts[&#34;has_more&#34;]
+    while got_posts &lt; limit and has_more:
+        posts = await self.session.get(path=f&#34;user_feed/{user_id}?ids_only={&#39;true&#39; if ids_only else &#39;false&#39;}&amp;before_id={before_id}&#34;)
+        before_id = posts[&#34;next_before_id&#34;]
+        has_more = posts[&#34;has_more&#34;]
+        if ids_only:
+            for post_id in posts[&#34;posts&#34;]:
+                if got_posts &gt;= limit:
+                    return tuple(returned_data)
+                returned_data.append(post_id)
+                got_posts += 1
+        else:
+            for post_data in posts[&#34;posts&#34;]:
+                if got_posts &gt;= limit:
+                    return tuple(returned_data)
+                returned_data.append(Reply(**post_data))
+                got_posts += 1
+
+    return tuple(returned_data)</code></pre>
+</details>
+<div class="desc"><p>Abstract (not the raw API) method to get user replies by limit</p>
+<p>:param user_id: User's ID. May be here: <a href="https://char.social/u/USER_ID">https://char.social/u/USER_ID</a>
+:param limit: Limit to get posts. Get last LIMIT posts.
+:param ids_only: Return only post ids without any other data
+:return: Tuple of user posts</p></div>
+</dd>
+<dt id="aiochar.client.bot.Bot.mute_hashtag"><code class="name flex">
+<span>async def <span class="ident">mute_hashtag</span></span>(<span>self,<br>hashtag: str | <a title="aiochar.models.Hashtag" href="../models.html#aiochar.models.Hashtag">Hashtag</a>) ‑> bool</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def mute_hashtag(
+        self,
+        hashtag: str | Hashtag) -&gt; bool:
+    if isinstance(hashtag, Hashtag):
+        hashtag = hashtag.tag
+
+    data = {&#34;hashtag&#34;: hashtag}
+
+    raw = await self.session.post(path=&#34;mute_tag&#34;, json=data)
+
+    return raw[&#34;success&#34;]</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="aiochar.client.bot.Bot.mute_user"><code class="name flex">
+<span>async def <span class="ident">mute_user</span></span>(<span>self,<br>user: <a title="aiochar.models.User" href="../models.html#aiochar.models.User">User</a> | None = None,<br>user_id: int | None = None) ‑> bool</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def mute_user(
+        self,
+        user: User | None = None,
+        user_id: int | None = None) -&gt; bool:
+    &#34;&#34;&#34;
+    Mute user by user_id or User()
+
+    :param user: User()
+    :param user_id: user_id
+    :return: True if followed else False
+    &#34;&#34;&#34;
+    if not user and not user_id:
         raise NoEnoughData
 
-    data = {
-        &#34;post_id&#34;: post_id
-    }
+    if user:
+        user_id = user.id
 
-    raw = await self.session.post(path=&#34;like_post&#34;, data=data)
+    data = {&#34;user_id&#34;: user_id}
 
-    return raw</code></pre>
+    followed = await self.session.post(&#34;mute_user&#34;, json=data)
+    return followed[&#34;success&#34;]</code></pre>
 </details>
-<div class="desc"><p>Like a post by id</p>
-<p>:param post: Post you can get by Bot.post() or similar
-:param post_id: Post_id, int
-:return: like_count, liked, post_id, success
-:raise: NotFoundPost when not found post API error, NoEnoughData when no post and no post_id</p></div>
+<div class="desc"><p>Mute user by user_id or User()</p>
+<p>:param user: User()
+:param user_id: user_id
+:return: True if followed else False</p></div>
+</dd>
+<dt id="aiochar.client.bot.Bot.unfollow_hashtag"><code class="name flex">
+<span>async def <span class="ident">unfollow_hashtag</span></span>(<span>self,<br>hashtag: str | <a title="aiochar.models.Hashtag" href="../models.html#aiochar.models.Hashtag">Hashtag</a>) ‑> bool</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def unfollow_hashtag(
+        self,
+        hashtag: str | Hashtag) -&gt; bool:
+    if isinstance(hashtag, Hashtag):
+        hashtag = hashtag.tag
+
+    data = {&#34;hashtag&#34;: hashtag}
+
+    raw = await self.session.post(path=&#34;unfollow_tag&#34;, json=data)
+
+    return raw[&#34;success&#34;]</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="aiochar.client.bot.Bot.unfollow_user"><code class="name flex">
+<span>async def <span class="ident">unfollow_user</span></span>(<span>self,<br>user: <a title="aiochar.models.User" href="../models.html#aiochar.models.User">User</a> | None = None,<br>user_id: int | None = None) ‑> bool</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def unfollow_user(
+        self,
+        user: User | None = None,
+        user_id: int | None = None) -&gt; bool:
+    &#34;&#34;&#34;
+    Unfollow user by user_id or User()
+
+    :param user: User()
+    :param user_id: user_id
+    :return: True if followed else False
+    &#34;&#34;&#34;
+    if not user and not user_id:
+        raise NoEnoughData
+
+    if user:
+        user_id = user.id
+
+    data = {&#34;user_id&#34;: user_id}
+
+    followed = await self.session.post(&#34;unfollow_user&#34;, json=data)
+    return followed[&#34;success&#34;]</code></pre>
+</details>
+<div class="desc"><p>Unfollow user by user_id or User()</p>
+<p>:param user: User()
+:param user_id: user_id
+:return: True if followed else False</p></div>
+</dd>
+<dt id="aiochar.client.bot.Bot.unmute_hashtag"><code class="name flex">
+<span>async def <span class="ident">unmute_hashtag</span></span>(<span>self,<br>hashtag: str | <a title="aiochar.models.Hashtag" href="../models.html#aiochar.models.Hashtag">Hashtag</a>) ‑> bool</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def unmute_hashtag(
+        self,
+        hashtag: str | Hashtag) -&gt; bool:
+    if isinstance(hashtag, Hashtag):
+        hashtag = hashtag.tag
+
+    data = {&#34;hashtag&#34;: hashtag}
+
+    raw = await self.session.post(path=&#34;unmute_tag&#34;, json=data)
+
+    return raw[&#34;success&#34;]</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="aiochar.client.bot.Bot.unmute_user"><code class="name flex">
+<span>async def <span class="ident">unmute_user</span></span>(<span>self,<br>user: <a title="aiochar.models.User" href="../models.html#aiochar.models.User">User</a> | None = None,<br>user_id: int | None = None) ‑> bool</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def unmute_user(
+        self,
+        user: User | None = None,
+        user_id: int | None = None) -&gt; bool:
+    &#34;&#34;&#34;
+    Unmute user by user_id or User()
+
+    :param user: User()
+    :param user_id: user_id
+    :return: True if followed else False
+    &#34;&#34;&#34;
+    if not user and not user_id:
+        raise NoEnoughData
+
+    if user:
+        user_id = user.id
+
+    data = {&#34;user_id&#34;: user_id}
+
+    followed = await self.session.post(&#34;unmute_user&#34;, json=data)
+    return followed[&#34;success&#34;]</code></pre>
+</details>
+<div class="desc"><p>Unmute user by user_id or User()</p>
+<p>:param user: User()
+:param user_id: user_id
+:return: True if followed else False</p></div>
 </dd>
 </dl>
 </dd>
@@ -302,12 +2020,34 @@ def token(self):
 <ul>
 <li>
 <h4><code><a title="aiochar.client.bot.Bot" href="#aiochar.client.bot.Bot">Bot</a></code></h4>
-<ul class="">
+<ul class="two-column">
 <li><code><a title="aiochar.client.bot.Bot.close" href="#aiochar.client.bot.Bot.close">close</a></code></li>
+<li><code><a title="aiochar.client.bot.Bot.create_post" href="#aiochar.client.bot.Bot.create_post">create_post</a></code></li>
+<li><code><a title="aiochar.client.bot.Bot.create_reply" href="#aiochar.client.bot.Bot.create_reply">create_reply</a></code></li>
+<li><code><a title="aiochar.client.bot.Bot.follow_hashtag" href="#aiochar.client.bot.Bot.follow_hashtag">follow_hashtag</a></code></li>
+<li><code><a title="aiochar.client.bot.Bot.follow_user" href="#aiochar.client.bot.Bot.follow_user">follow_user</a></code></li>
+<li><code><a title="aiochar.client.bot.Bot.get_country_feed" href="#aiochar.client.bot.Bot.get_country_feed">get_country_feed</a></code></li>
+<li><code><a title="aiochar.client.bot.Bot.get_feed" href="#aiochar.client.bot.Bot.get_feed">get_feed</a></code></li>
+<li><code><a title="aiochar.client.bot.Bot.get_followed_tags" href="#aiochar.client.bot.Bot.get_followed_tags">get_followed_tags</a></code></li>
+<li><code><a title="aiochar.client.bot.Bot.get_followers" href="#aiochar.client.bot.Bot.get_followers">get_followers</a></code></li>
+<li><code><a title="aiochar.client.bot.Bot.get_following" href="#aiochar.client.bot.Bot.get_following">get_following</a></code></li>
+<li><code><a title="aiochar.client.bot.Bot.get_hashtag_feed" href="#aiochar.client.bot.Bot.get_hashtag_feed">get_hashtag_feed</a></code></li>
+<li><code><a title="aiochar.client.bot.Bot.get_leaderboard" href="#aiochar.client.bot.Bot.get_leaderboard">get_leaderboard</a></code></li>
 <li><code><a title="aiochar.client.bot.Bot.get_me" href="#aiochar.client.bot.Bot.get_me">get_me</a></code></li>
+<li><code><a title="aiochar.client.bot.Bot.get_muted_by" href="#aiochar.client.bot.Bot.get_muted_by">get_muted_by</a></code></li>
+<li><code><a title="aiochar.client.bot.Bot.get_muted_tags" href="#aiochar.client.bot.Bot.get_muted_tags">get_muted_tags</a></code></li>
+<li><code><a title="aiochar.client.bot.Bot.get_muting" href="#aiochar.client.bot.Bot.get_muting">get_muting</a></code></li>
 <li><code><a title="aiochar.client.bot.Bot.get_post" href="#aiochar.client.bot.Bot.get_post">get_post</a></code></li>
-<li><code><a title="aiochar.client.bot.Bot.like_post" href="#aiochar.client.bot.Bot.like_post">like_post</a></code></li>
+<li><code><a title="aiochar.client.bot.Bot.get_user" href="#aiochar.client.bot.Bot.get_user">get_user</a></code></li>
+<li><code><a title="aiochar.client.bot.Bot.get_user_posts" href="#aiochar.client.bot.Bot.get_user_posts">get_user_posts</a></code></li>
+<li><code><a title="aiochar.client.bot.Bot.get_user_replies" href="#aiochar.client.bot.Bot.get_user_replies">get_user_replies</a></code></li>
+<li><code><a title="aiochar.client.bot.Bot.mute_hashtag" href="#aiochar.client.bot.Bot.mute_hashtag">mute_hashtag</a></code></li>
+<li><code><a title="aiochar.client.bot.Bot.mute_user" href="#aiochar.client.bot.Bot.mute_user">mute_user</a></code></li>
 <li><code><a title="aiochar.client.bot.Bot.token" href="#aiochar.client.bot.Bot.token">token</a></code></li>
+<li><code><a title="aiochar.client.bot.Bot.unfollow_hashtag" href="#aiochar.client.bot.Bot.unfollow_hashtag">unfollow_hashtag</a></code></li>
+<li><code><a title="aiochar.client.bot.Bot.unfollow_user" href="#aiochar.client.bot.Bot.unfollow_user">unfollow_user</a></code></li>
+<li><code><a title="aiochar.client.bot.Bot.unmute_hashtag" href="#aiochar.client.bot.Bot.unmute_hashtag">unmute_hashtag</a></code></li>
+<li><code><a title="aiochar.client.bot.Bot.unmute_user" href="#aiochar.client.bot.Bot.unmute_user">unmute_user</a></code></li>
 </ul>
 </li>
 </ul>
