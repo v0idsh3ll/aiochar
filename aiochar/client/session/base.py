@@ -4,6 +4,8 @@ from asyncio import sleep
 from typing import Any, Dict, Optional
 from aiolimiter import AsyncLimiter
 import logging
+from aiohttp_socks import ProxyConnector
+
 logger = logging.getLogger('aiochar.session')
 logger.addHandler(logging.NullHandler())
 
@@ -19,17 +21,24 @@ class BaseSession:
     def __init__(
             self,
             base_url: str = "https://char.social/api/v1/",
-            base_headers: Optional[Dict[str, str]] = None) -> None:
+            base_headers: Optional[Dict[str, str]] = None,
+            proxy: Optional[str] = None) -> None:
         self.base_url = base_url
         self._session: Optional[aiohttp.ClientSession] = None
         self._base_headers = base_headers
         self._429_delay: float = 1.0
+        self.proxy = proxy
         logger.info('Session was created')
 
     async def get_session(self) -> aiohttp.ClientSession:
         """Get or create aiohttp session."""
         if self._session is None or self._session.closed:
-            self._session = aiohttp.ClientSession()
+            if self.proxy:
+                connector = ProxyConnector.from_url(self.proxy)
+                self._session = aiohttp.ClientSession(connector=connector)
+            else:
+                self._session = aiohttp.ClientSession()
+
         return self._session
 
     async def close(self) -> None:

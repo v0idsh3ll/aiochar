@@ -22,7 +22,8 @@ dependencies = [
     "typing-inspection==0.4.2",
     "typing_extensions==4.15.0",
     "yarl==1.23.0",
-    "aiolimiter==1.2.1"
+    "aiolimiter==1.2.1",
+    "aiohttp-socks==0.11.0"
 ]
 
 [project.urls]

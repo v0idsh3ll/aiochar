@@ -14,7 +14,8 @@ class Bot:
     def __init__(
             self,
             token: str,
-            session: BaseSession | None = None):
+            session: BaseSession | None = None,
+            proxy: str | None = None):
         """
         Bot class.
 
@@ -29,7 +30,7 @@ class Bot:
         self.__token = token
         self.base_headers = {"Authorization": f"Bearer {token}"}
 
-        self.session = session or BaseSession(base_headers=self.base_headers)
+        self.session = session or BaseSession(base_headers=self.base_headers, proxy=proxy)
 
     @property
     def token(self):
