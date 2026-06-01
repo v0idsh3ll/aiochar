@@ -60,7 +60,7 @@ class Bot:
 
         raw = raw["post"]
 
-        return Post(**raw) if not "parent_post_id" in raw else Reply(**raw)
+        return Post(**raw)
 
     async def get_user_posts(
             self,
