@@ -74,12 +74,6 @@ class Reply:
             result["created_at_iso"] = result["created_at_iso"].isoformat()
         return result
 
-    def __str__(self):
-        return str(self.to_dict())
-
-    def __repr__(self):
-        return str(self.to_dict())
-
 class Post:
     def __init__(
         self,
@@ -157,13 +151,6 @@ class Post:
             result["created_at_iso"] = result["created_at_iso"].isoformat()
         return result
 
-    def __str__(self):
-        return str(self.to_dict())
-
-    def __repr__(self):
-        return str(self.to_dict())
-
-
 class User:
     """
     Main class to contain users
@@ -230,12 +217,6 @@ class User:
             result["created_at_iso"] = result["created_at_iso"].isoformat()
         return result
 
-    def __str__(self):
-        return str(self.to_dict())
-
-    def __repr__(self):
-        return str(self.to_dict())
-
 class Hashtag:
     """Main class to contain hashtags."""
 
@@ -253,8 +234,29 @@ class Hashtag:
         result = self.__dict__.copy()
         return result
 
-    def __str__(self):
-        return str(self.to_dict())
+class Notification:
+    """Contains notifications"""
 
-    def __repr__(self):
-        return str(self.to_dict())
+    def __init__(
+            self,
+            actor_user_id: int,
+            created_at_iso: str,
+            notification_id: int,
+            notification_type: str,
+            post_id: int | None = None,
+            read_at_iso: str | None = None
+    ):
+        self.actor_user_id = actor_user_id
+        self.created_at_iso = created_at_iso
+        self.id = notification_id
+        self.type = notification_type
+        self.post_id = post_id
+        self.read_at_iso = read_at_iso
+    
+    def to_dict(self) -> dict:
+        """
+        Convert a notification to a dict.
+        
+        :return: Dict with notification data."""
+        result = self.__dict__.copy()
+        return result

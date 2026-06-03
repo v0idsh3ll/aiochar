@@ -61,12 +61,17 @@ class BaseSession:
         session = await self.get_session()
 
         async with limiter:
-            logger.debug(f'Making request with method {method} and path {path}')
+            msg = f'Making request with method {method} and path {path}'
+            if 'data' in kwargs:
+                msg += f', and data {kwargs["data"]}'
+            logger.debug(msg)
             try:
+                now_headers = kwargs.pop('headers', {})
+                request_headers = {**now_headers, **self._base_headers}
                 async with session.request(
                     method=method,
                     url=f"{self.base_url}{path.lstrip('/')}",
-                    headers=self._base_headers,
+                    headers=request_headers,
                     **kwargs
                 ) as response:
                     if response.status == 429:

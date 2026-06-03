@@ -3,7 +3,7 @@ from typing import List
 
 from aiochar.utils.token import validate_token
 from .session.base import BaseSession
-from ..models import Post, User, Reply, Hashtag
+from ..models import Post, User, Reply, Hashtag, Notification
 
 from .utils import sort_validation, timeframe_validation, country_code_validation, post_format_validation, post_content_validation, leaderboard_category_validation
 
@@ -595,6 +595,38 @@ class Bot:
             tags.append(Hashtag(tag))
 
         return tuple(tags)
+    
+    async def get_notifications(
+            self,
+            limit: int = 1,
+            ids_only: bool = False
+    ) -> tuple[Notification, ...] | tuple[int, ...]:
+        """
+        Get notifications.
+        
+        :param limit: limit of notifications you want to get"""
+
+        raw = await self.session.get(path=f"notifications?limit={limit}")
+        notifications_json = raw["notifications"]
+
+        notifications = []
+
+        if ids_only:
+            for notification in notifications_json:
+                notifications.append(notification["id"])
+        else:
+            for notification in notifications_json:
+                data = {"actor_user_id": notification["actor_user_id"],
+                "created_at_iso": notification["created_at_iso"],
+                "notification_id": notification["id"],
+                "notification_type": notification["type"],
+                "post_id": notification["post_id"],
+                "read_at_iso": notification["read_at_iso"]}
+
+                notifications.append(Notification(**data))
+        
+        return tuple(notifications)
+
 
     #POST METHODS
 
@@ -787,6 +819,17 @@ class Bot:
         raw = await self.session.post(path="unmute_tag", json=data)
 
         return raw["success"]
+    
+    async def read_notifications(
+            self,
+            ids: List[int] | tuple[int]
+    ):
+        
+        data = {"ids": list(ids)}
+        headers = {"content-type": "application/json"}
+        result = await self.session.post(path="notifications/read", json=data, headers=headers)
+
+        return result
 
     # async def like_post(
     #         self,
